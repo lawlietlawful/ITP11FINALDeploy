@@ -1,0 +1,467 @@
+@extends('layouts.app')
+@section('content')
+
+<div class="flex items-center justify-between mb-6" x-data="{ createModal: {{ $errors->any() ? 'true' : 'false' }} }">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Document Requests</h1>
+        <p class="text-sm text-gray-400 mt-1">Track and manage all document requests</p>
+    </div>
+    <button @click="createModal = true" class="btn-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        New Request
+    </button>
+
+    {{-- Create Request Modal --}}
+    <template x-teleport="body">
+        <div x-show="createModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="createModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="createModal = false"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                <div x-show="createModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
+                    <form method="POST" action="{{ route('requests.store') }}" x-data="{ purpose: '' }" class="flex flex-col h-full">
+                        @csrf
+                        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h3 class="text-lg leading-6 font-bold text-gray-900">New Document Request</h3>
+                            <button type="button" @click="createModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="px-6 py-6 space-y-5 text-left">
+                            {{-- Validation Errors --}}
+                            @if($errors->any())
+                                <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Resident <span class="text-red-400">*</span></label>
+                                <select name="resident_id" required class="form-input w-full">
+                                    <option value="">Select a resident...</option>
+                                    @if(isset($residents))
+                                        @foreach($residents as $resident)
+                                            <option value="{{ $resident->id }}" {{ old('resident_id') == $resident->id ? 'selected' : '' }}>
+                                                {{ $resident->last_name }}, {{ $resident->first_name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Document Type <span class="text-red-400">*</span></label>
+                                <select name="document_type_id" required class="form-input w-full">
+                                    <option value="">Select document type...</option>
+                                    @if(isset($documentTypes))
+                                        @foreach($documentTypes as $type)
+                                            <option value="{{ $type->id }}" {{ old('document_type_id') == $type->id ? 'selected' : '' }}>
+                                                {{ $type->name }} (₱{{ number_format($type->fee, 2) }})
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Purpose <span class="text-red-400">*</span></label>
+                                <textarea name="purpose" rows="3" required x-model="purpose" x-init="purpose = $el.value" class="form-input w-full resize-none" placeholder="State the purpose of this document request...">{{ old('purpose') }}</textarea>
+                                <div class="flex flex-wrap gap-1.5 mt-2.5 items-center">
+                                    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Quick-fill:</span>
+                                    <button type="button" @click="purpose = 'For Employment / Job Application'" class="px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-primary-50 text-gray-600 hover:text-primary-700 border border-gray-200/60 hover:border-primary-100 text-[11px] font-medium transition-all">Employment</button>
+                                    <button type="button" @click="purpose = 'Scholarship Application Requirement'" class="px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-primary-50 text-gray-600 hover:text-primary-700 border border-gray-200/60 hover:border-primary-100 text-[11px] font-medium transition-all">Scholarship</button>
+                                    <button type="button" @click="purpose = 'Bank Account Opening / Requirement'" class="px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-primary-50 text-gray-600 hover:text-primary-700 border border-gray-200/60 hover:border-primary-100 text-[11px] font-medium transition-all">Bank Req.</button>
+                                    <button type="button" @click="purpose = 'General Identification / Personal Reference'" class="px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-primary-50 text-gray-600 hover:text-primary-700 border border-gray-200/60 hover:border-primary-100 text-[11px] font-medium transition-all">Identification</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 modal-actions">
+                            <button @click="createModal = false" type="button" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+{{-- Analytics Summary Cards --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pending Requests</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['pending']) }}</p>
+                <p class="text-[10px] text-amber-500 font-medium mt-0.5 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Requires action
+                </p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Processing</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['processing']) }}</p>
+                <p class="text-[10px] text-blue-500 font-medium mt-0.5">Currently drafted</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Released This Month</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['released_month']) }}</p>
+                <p class="text-[10px] text-emerald-500 font-medium mt-0.5">Successfully served</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Volume</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total']) }}</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">Lifetime requests</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Advanced Search & Filters --}}
+<div class="mb-5" x-data="{
+    search: '{{ request('search') }}',
+    debounceTimer: null,
+    submitForm() {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => {
+            this.$refs.filterForm.submit();
+        }, 400);
+    }
+}">
+    <form method="GET" action="{{ route('requests.index') }}" x-ref="filterForm" class="flex flex-wrap gap-3 items-end w-full">
+        <div class="relative flex-1 min-w-[220px]">
+            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Search Resident</label>
+            <svg class="w-4 h-4 absolute left-3.5 bottom-[11px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" name="search" x-model="search"
+                   @input="if(search.length >= 1 || search.length === 0) submitForm()"
+                   placeholder="Search by resident name..."
+                   class="form-input w-full pl-10 pr-4">
+        </div>
+        <div class="w-[150px]">
+            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
+            <select name="status" @change="submitForm()" class="form-input w-full text-sm">
+                <option value="">All Status</option>
+                @foreach(['pending','processing','released','rejected'] as $status)
+                    <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                @endforeach
+            </select>
+        </div>
+        @if(request('search') || request('status'))
+            <a href="{{ route('requests.index') }}" class="btn-secondary h-[38px] flex items-center">Clear</a>
+        @endif
+    </form>
+</div>
+
+{{-- Table --}}
+<div class="glass-card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-gray-50/40">
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Resident</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Document</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Purpose</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50/80">
+            @forelse($requests as $req)
+            <tr class="table-row" x-data="{ viewModal: false, deleteModal: false, residentModal: false }">
+                <td class="px-6 py-3.5 text-gray-400 font-mono text-xs">{{ $req->id }}</td>
+                <td class="px-6 py-3.5">
+                    <button @click="residentModal = true" class="font-medium text-gray-900 hover:text-primary-600 transition-colors text-left block">
+                        {{ $req->resident->full_name }}
+                    </button>
+                    <span class="block text-[10px] font-mono text-gray-400 mt-0.5">{{ $req->resident->resident_id }}</span>
+                </td>
+                <td class="px-6 py-3.5 text-gray-600">{{ $req->documentType->name }}</td>
+                <td class="px-6 py-3.5 text-gray-600 max-w-[200px] truncate">{{ $req->purpose }}</td>
+                <td class="px-6 py-3.5">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                </td>
+                <td class="px-6 py-3.5 text-gray-400">{{ $req->created_at->format('M d, Y') }}</td>
+                <td class="px-6 py-3.5 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" @click="viewModal = true" class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50/80 rounded-lg transition-colors" title="View">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                        <button type="button" @click="deleteModal = true" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50/80 rounded-lg transition-colors" title="Delete">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+
+                    <template x-teleport="body">
+                        {{-- View Modal --}}
+                        <div x-show="viewModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div x-show="viewModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="viewModal = false"></div>
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                <div x-show="viewModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full border border-gray-100">
+                                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                        <div class="flex items-center gap-3">
+                                            <h3 class="text-lg leading-6 font-bold text-gray-900">Request #{{ $req->id }}</h3>
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                                        </div>
+                                        <button @click="viewModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="px-6 py-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm mb-8">
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Tracking Code</span>
+                                                <p class="mt-1 font-bold text-primary-700 font-mono">{{ $req->tracking_code ?? '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Resident</span>
+                                                <p class="mt-1 font-medium text-gray-900">{{ $req->resident->full_name }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Document Type</span>
+                                                <p class="mt-1 font-medium text-gray-900">{{ $req->documentType->name }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Fee</span>
+                                                <p class="mt-1 text-gray-700 font-medium">₱{{ number_format($req->documentType->fee, 2) }}</p>
+                                            </div>
+                                            <div class="sm:col-span-2">
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Purpose</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->purpose }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Date Filed</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->created_at->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                            @if($req->processedBy)
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Processed By</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->processedBy->name }}</p>
+                                            </div>
+                                            @endif
+                                            @if($req->released_at)
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Released Date</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->released_at->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                            @endif
+                                            @if($req->rejection_reason)
+                                            <div class="sm:col-span-2">
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Rejection Reason</span>
+                                                <p class="mt-1 text-red-600 bg-red-50 p-3 rounded-lg">{{ $req->rejection_reason }}</p>
+                                            </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="pt-5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-white">
+                                            <div class="flex flex-wrap items-center gap-3">
+                                                @if($req->status === 'pending')
+                                                <form action="{{ route('requests.approve', $req) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn-primary">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                        Approve
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('requests.reject', $req) }}" method="POST" class="flex gap-2 items-center">
+                                                    @csrf
+                                                    <button class="btn-danger flex-shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        Reject
+                                                    </button>
+                                                    <input name="rejection_reason" placeholder="Rejection reason..." required class="form-input w-64">
+                                                </form>
+                                                @endif
+                                                @if($req->status === 'processing')
+                                                <form action="{{ route('requests.release', $req) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn-success">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        Mark as Released
+                                                    </button>
+                                                </form>
+                                                @endif
+                                                @if($req->status === 'released')
+                                                <div class="flex items-center gap-2 text-emerald-600 bg-emerald-50/80 px-4 py-2.5 rounded-xl">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    <span class="text-sm font-medium">This document has been released.</span>
+                                                </div>
+                                                @endif
+                                                @if($req->status === 'rejected')
+                                                <div class="flex items-center gap-2 text-red-600 bg-red-50/80 px-4 py-2.5 rounded-xl">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    <span class="text-sm font-medium">This request was rejected.</span>
+                                                </div>
+                                                @endif
+                                            </div>
+                                            @if(in_array($req->status, ['processing', 'released']))
+                                            <a href="{{ route('requests.print', $req) }}" target="_blank" class="btn-secondary inline-flex items-center gap-2 border-gray-200 hover:border-primary-200 text-gray-700 hover:text-primary-700 font-medium">
+                                                <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                Print Document
+                                            </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-teleport="body">
+                        {{-- Delete Modal --}}
+                        <div x-show="deleteModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div x-show="deleteModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="deleteModal = false"></div>
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                <div x-show="deleteModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-gray-100 p-6">
+                                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="text-lg leading-6 font-bold text-gray-900">Delete Request</h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-gray-500">Are you sure you want to delete the request from <span class="font-bold text-gray-700">{{ $req->resident->full_name }}</span>? This action cannot be undone.</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 flex justify-center gap-3 modal-actions">
+                                        <button @click="deleteModal = false" type="button" class="btn-secondary flex-1 justify-center">Cancel</button>
+                                        <form action="{{ route('requests.destroy', $req) }}" method="POST" class="flex-1">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn-danger w-full">
+                                                Delete Request
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-teleport="body">
+                        {{-- Resident Profile Modal --}}
+                        <div x-show="residentModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div x-show="residentModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="residentModal = false"></div>
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                <div x-show="residentModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full border border-gray-100">
+                                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                        <div>
+                                            <h3 class="text-lg leading-6 font-bold text-gray-900">{{ $req->resident->full_name }}</h3>
+                                            <span class="text-[11px] font-mono text-gray-400">{{ $req->resident->resident_id }}</span>
+                                        </div>
+                                        <button @click="residentModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="px-6 py-6">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm mb-6">
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">First Name</span>
+                                                <p class="mt-1 text-gray-700 font-medium">{{ $req->resident->first_name }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Middle Name</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->middle_name ?? '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Last Name</span>
+                                                <p class="mt-1 text-gray-700 font-medium">{{ $req->resident->last_name }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Address</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->address }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Contact Number</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->contact_number ?? '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Gender</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->gender ?? '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Civil Status</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->civil_status ?? '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Birthdate</span>
+                                                <p class="mt-1 text-gray-700">{{ $req->resident->birthdate ? $req->resident->birthdate->format('M d, Y') : '—' }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Age</span>
+                                                <p class="mt-1 text-gray-700 font-bold">{{ $req->resident->age !== null ? $req->resident->age . ' years old' : '—' }}</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- Household Members --}}
+                                        @php $householdMembers = $req->resident->householdMembers(); @endphp
+                                        @if($householdMembers->count() > 0)
+                                            <div class="border-t border-gray-100/60 pt-4">
+                                                <h4 class="text-[13px] font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                                    Household Members
+                                                    <span class="text-[10px] text-gray-400 font-normal">({{ $householdMembers->count() }} sharing household)</span>
+                                                </h4>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach($householdMembers as $member)
+                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-gray-50 text-gray-700 border border-gray-100/80">
+                                                            <span class="w-1.5 h-1.5 rounded-full {{ $member->status_color['dot'] }}"></span>
+                                                            {{ $member->full_name }}
+                                                            <span class="text-[10px] text-gray-400">({{ $member->status }})</span>
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">No requests found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-5">{{ $requests->links() }}</div>
+
+@endsection
