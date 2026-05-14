@@ -250,6 +250,7 @@
             z-index: 10;
         }
     </style>
+    @stack('styles')
 </head>
 <body class="text-gray-800 overflow-hidden">
 
@@ -357,6 +358,14 @@
                         <span class="text-sm font-medium">{{ session('success') }}</span>
                     </div>
                     <script>setTimeout(() => { const el = document.getElementById('flash-success'); if(el) el.style.display='none'; }, 4000);</script>
+                @endif
+
+                @if(session('error'))
+                    <div class="mb-5 bg-red-50/80 text-red-800 border border-red-200/60 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-sm backdrop-blur-sm" id="flash-error">
+                        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-sm font-medium">{{ session('error') }}</span>
+                    </div>
+                    <script>setTimeout(() => { const el = document.getElementById('flash-error'); if(el) el.style.display='none'; }, 5000);</script>
                 @endif
 
                 @if($errors->any())

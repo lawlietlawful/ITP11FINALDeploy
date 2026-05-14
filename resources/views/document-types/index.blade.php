@@ -38,14 +38,31 @@
                                 </div>
                             @endif
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Document Name <span class="text-red-400">*</span></label>
-                                <input type="text" name="name" value="{{ old('name') }}" required class="form-input w-full" placeholder="e.g. Barangay Clearance">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Document Name <span class="text-red-400">*</span></label>
+                                    <input type="text" name="name" value="{{ old('name') }}" required class="form-input w-full" placeholder="e.g. Barangay Clearance">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Category <span class="text-red-400">*</span></label>
+                                    <select name="category" required class="form-input w-full">
+                                        <option value="Clearance" {{ old('category') == 'Clearance' ? 'selected' : '' }}>Clearance</option>
+                                        <option value="Certificate" {{ old('category') == 'Certificate' ? 'selected' : '' }}>Certificate</option>
+                                        <option value="Permit" {{ old('category') == 'Permit' ? 'selected' : '' }}>Permit</option>
+                                        <option value="ID" {{ old('category') == 'ID' ? 'selected' : '' }}>ID</option>
+                                        <option value="Other" {{ old('category', 'Other') == 'Other' ? 'selected' : '' }}>Other</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Description</label>
                                 <textarea name="description" rows="3" class="form-input w-full resize-none" placeholder="Brief description of the document...">{{ old('description') }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Requirements</label>
+                                <textarea name="requirements" rows="2" class="form-input w-full resize-none" placeholder="e.g. Valid ID, Proof of Residency...">{{ old('requirements') }}</textarea>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -70,31 +87,198 @@
     </template>
 </div>
 
+{{-- Analytics Summary Cards --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Types</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total']) }}</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">All created documents</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Active</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['active']) }}</p>
+                <p class="text-[10px] text-emerald-500 font-medium mt-0.5">Currently available</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Most Requested</p>
+                <p class="text-xl font-extrabold text-gray-900 mt-1 truncate max-w-[120px]" title="{{ $stats['most_requested'] }}">{{ $stats['most_requested'] }}</p>
+                <p class="text-[10px] text-blue-500 font-medium mt-0.5">Highest volume</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Revenue</p>
+                <p class="text-2xl font-extrabold text-gray-900 mt-1">₱{{ number_format($stats['total_revenue'], 2) }}</p>
+                <p class="text-[10px] text-amber-500 font-medium mt-0.5">From released docs</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Advanced Search & Filters --}}
+<div class="mb-5" x-data="{
+    search: '{{ request('search') }}',
+    debounceTimer: null,
+    submitForm() {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => {
+            this.$refs.filterForm.submit();
+        }, 400);
+    }
+}">
+    <form method="GET" action="{{ route('document-types.index') }}" x-ref="filterForm" class="flex flex-wrap gap-3 items-end w-full">
+        <div class="relative flex-1 min-w-[220px]">
+            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Search Document Type</label>
+            <svg class="w-4 h-4 absolute left-3.5 bottom-[11px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" name="search" x-model="search"
+                   @input="if(search.length >= 1 || search.length === 0) submitForm()"
+                   placeholder="Search by name..."
+                   class="form-input w-full pl-10 pr-4">
+        </div>
+        <div class="w-[150px]">
+            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
+            <select name="status" @change="submitForm()" class="form-input w-full text-sm">
+                <option value="">All Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+        </div>
+        @if(request('search') || request('status'))
+            <a href="{{ route('document-types.index') }}" class="btn-secondary h-[38px] flex items-center">Clear</a>
+        @endif
+    </form>
+</div>
+
 <div class="glass-card overflow-hidden">
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-gray-50/40">
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Description</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Fee</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Processing Days</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 w-10 text-center"></th>
+                <th class="px-6 py-3 text-left">
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => request('sort') == 'name' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-center gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors">
+                        Name
+                        @if(request('sort', 'created_at') == 'name')
+                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ request('direction') == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"/></svg>
+                        @endif
+                    </a>
+                </th>
+                <th class="px-6 py-3 text-left">
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'fee', 'direction' => request('sort') == 'fee' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-center gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors">
+                        Fee
+                        @if(request('sort') == 'fee')
+                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ request('direction') == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"/></svg>
+                        @endif
+                    </a>
+                </th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Requests</th>
+                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Revenue</th>
+                <th class="px-6 py-3 text-left">
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'processing_days', 'direction' => request('sort') == 'processing_days' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-center gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors">
+                        Processing Days
+                        @if(request('sort') == 'processing_days')
+                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ request('direction') == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"/></svg>
+                        @endif
+                    </a>
+                </th>
+                <th class="px-6 py-3 text-left">
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'is_active', 'direction' => request('sort') == 'is_active' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-center gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors">
+                        Status
+                        @if(request('sort') == 'is_active')
+                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ request('direction') == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"/></svg>
+                        @endif
+                    </a>
+                </th>
                 <th class="px-6 py-3 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50/80">
+        <tbody class="divide-y divide-gray-50/80" 
+               x-data="{ 
+                   initSortable() {
+                       if (typeof Sortable === 'undefined') return;
+                       new Sortable(this.$el, {
+                           handle: '.drag-handle',
+                           animation: 150,
+                           ghostClass: 'bg-gray-50',
+                           onEnd: (evt) => {
+                               let order = [];
+                               this.$el.querySelectorAll('.sortable-item').forEach(el => {
+                                   order.push(el.dataset.id);
+                               });
+                               
+                               fetch('{{ route('document-types.reorder') }}', {
+                                   method: 'POST',
+                                   headers: {
+                                       'Content-Type': 'application/json',
+                                       'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                   },
+                                   body: JSON.stringify({ order: order })
+                               });
+                           }
+                       });
+                   }
+               }" 
+               x-init="$nextTick(() => initSortable())">
             @forelse($types as $type)
-            <tr class="table-row" x-data="{ editModal: false, deleteModal: false }">
-                <td class="px-6 py-3.5 font-medium text-gray-900">{{ $type->name }}</td>
-                <td class="px-6 py-3.5 text-gray-600 max-w-xs truncate">{{ $type->description ?? '—' }}</td>
+            <tr class="table-row sortable-item" data-id="{{ $type->id }}" x-data="{ editModal: false, deleteModal: false }">
+                <td class="px-4 py-3 text-center text-gray-400 hover:text-gray-600 cursor-move drag-handle" title="Drag to reorder">
+                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                </td>
+                <td class="px-6 py-3.5">
+                    <div class="font-medium text-gray-900">{{ $type->name }}</div>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide {{ $type->category_badge }}">{{ $type->category }}</span>
+                </td>
                 <td class="px-6 py-3.5 text-gray-700 font-medium">₱{{ number_format($type->fee, 2) }}</td>
+                <td class="px-6 py-3.5">
+                    <div class="text-gray-600 font-medium">{{ number_format($type->total_requests) }}</div>
+                    @if($type->last_requested_at)
+                        <div class="text-[10px] text-gray-400 mt-0.5" title="{{ \Carbon\Carbon::parse($type->last_requested_at)->format('M d, Y h:i A') }}">
+                            {{ \Carbon\Carbon::parse($type->last_requested_at)->diffForHumans() }}
+                        </div>
+                    @else
+                        <div class="text-[10px] text-gray-400 mt-0.5">Never requested</div>
+                    @endif
+                </td>
+                <td class="px-6 py-3.5 text-emerald-600 font-medium">₱{{ number_format($type->total_revenue, 2) }}</td>
                 <td class="px-6 py-3.5 text-gray-600">{{ $type->processing_days }} {{ Str::plural('day', $type->processing_days) }}</td>
                 <td class="px-6 py-3.5">
-                    @if($type->is_active)
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100/80 text-green-800">Active</span>
-                    @else
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100/80 text-gray-600">Inactive</span>
-                    @endif
+                    <form action="{{ route('document-types.toggle', $type) }}" method="POST">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 {{ $type->is_active ? 'bg-green-100/80 text-green-800 hover:bg-green-200/80 focus:ring-green-500' : 'bg-gray-100/80 text-gray-600 hover:bg-gray-200/80 focus:ring-gray-500' }}" title="Click to toggle status">
+                            {{ $type->is_active ? 'Active' : 'Inactive' }}
+                        </button>
+                    </form>
                 </td>
                 <td class="px-6 py-3.5 text-right">
                     <div class="flex items-center justify-end gap-1.5">
@@ -122,13 +306,30 @@
                                             </button>
                                         </div>
                                         <div class="px-6 py-6 space-y-5 text-left">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Document Name <span class="text-red-400">*</span></label>
-                                                <input type="text" name="name" value="{{ $type->name }}" required class="form-input w-full">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Document Name <span class="text-red-400">*</span></label>
+                                                    <input type="text" name="name" value="{{ $type->name }}" required class="form-input w-full">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Category <span class="text-red-400">*</span></label>
+                                                    <select name="category" required class="form-input w-full">
+                                                        <option value="Clearance" {{ $type->category == 'Clearance' ? 'selected' : '' }}>Clearance</option>
+                                                        <option value="Certificate" {{ $type->category == 'Certificate' ? 'selected' : '' }}>Certificate</option>
+                                                        <option value="Permit" {{ $type->category == 'Permit' ? 'selected' : '' }}>Permit</option>
+                                                        <option value="ID" {{ $type->category == 'ID' ? 'selected' : '' }}>ID</option>
+                                                        <option value="Other" {{ $type->category == 'Other' ? 'selected' : '' }}>Other</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Description</label>
                                                 <textarea name="description" rows="3" class="form-input w-full resize-none">{{ $type->description }}</textarea>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Requirements</label>
+                                                <textarea name="requirements" rows="2" class="form-input w-full resize-none" placeholder="e.g. Valid ID, Proof of Residency...">{{ $type->requirements }}</textarea>
                                             </div>
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                 <div>
@@ -188,7 +389,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">No document types found.</td></tr>
+            <tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">No document types found.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -196,4 +397,5 @@
 
 <div class="mt-5">{{ $types->links() }}</div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 @endsection

@@ -53,8 +53,10 @@ Route::middleware('auth')->group(function () {
         // Resident CSV import
         Route::post('residents/import/csv', [ResidentController::class, 'import'])->name('residents.import');
 
-        // Document Type management (create, edit, delete)
+        // Document Type management (create, edit, delete, toggle, reorder)
         Route::resource('document-types', DocumentTypeController::class)->except(['index', 'show']);
+        Route::patch('document-types/{document_type}/toggle', [DocumentTypeController::class, 'toggle'])->name('document-types.toggle');
+        Route::post('document-types/reorder', [DocumentTypeController::class, 'reorder'])->name('document-types.reorder');
 
         // Delete requests (admin only)
         Route::delete('requests/{request_item}', [DocumentRequestController::class, 'destroy'])->name('requests.destroy');
@@ -83,5 +85,6 @@ Route::middleware('auth')->group(function () {
 
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     });
 });
