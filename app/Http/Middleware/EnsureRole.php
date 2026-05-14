@@ -11,7 +11,7 @@ class EnsureRole {
      * Handle an incoming request.
      *
      * Accepts one or more role names separated by commas.
-     * Usage in routes: ->middleware('role:admin') or ->middleware('role:admin,staff')
+     * Usage in routes: ->middleware('role:admin')
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response {
         $user = $request->user();

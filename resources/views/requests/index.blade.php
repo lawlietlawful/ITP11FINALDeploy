@@ -1,42 +1,43 @@
 @extends('layouts.app')
 @section('content')
 
-<div class="flex items-center justify-between mb-6" x-data="{ createModal: {{ $errors->any() ? 'true' : 'false' }} }">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Document Requests</h1>
-        <p class="text-sm text-gray-400 mt-1">Track and manage all document requests</p>
-    </div>
-    <button @click="createModal = true" class="btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        New Request
-    </button>
+<div x-data="{ createModal: {{ $errors->any() ? 'true' : 'false' }}, highlightedRequestModal: {{ $highlightedRequest ? 'true' : 'false' }} }">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Document Requests</h1>
+            <p class="text-sm text-gray-400 mt-1">Track and manage all document requests</p>
+        </div>
+        <button @click="createModal = true" class="btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            New Request
+        </button>
 
-    {{-- Create Request Modal --}}
-    <template x-teleport="body">
-        <div x-show="createModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="createModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="createModal = false"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                <div x-show="createModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
-                    <form method="POST" action="{{ route('requests.store') }}" x-data="{ purpose: '' }" class="flex flex-col h-full">
-                        @csrf
-                        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h3 class="text-lg leading-6 font-bold text-gray-900">New Document Request</h3>
-                            <button type="button" @click="createModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        </div>
-                        <div class="px-6 py-6 space-y-5 text-left">
-                            {{-- Validation Errors --}}
-                            @if($errors->any())
-                                <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-                                    <ul class="list-disc list-inside space-y-1">
-                                        @foreach($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+        {{-- Create Request Modal --}}
+        <template x-teleport="body">
+            <div x-show="createModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
+                <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="createModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="createModal = false"></div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                    <div x-show="createModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
+                        <form method="POST" action="{{ route('requests.store') }}" x-data="{ purpose: '' }" class="flex flex-col h-full">
+                            @csrf
+                            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h3 class="text-lg leading-6 font-bold text-gray-900">New Document Request</h3>
+                                <button type="button" @click="createModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="px-6 py-6 space-y-5 text-left">
+                                {{-- Validation Errors --}}
+                                @if($errors->any())
+                                    <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+                                        <ul class="list-disc list-inside space-y-1">
+                                            @foreach($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Resident <span class="text-red-400">*</span></label>
@@ -77,73 +78,73 @@
                                     <button type="button" @click="purpose = 'General Identification / Personal Reference'" class="px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-primary-50 text-gray-600 hover:text-primary-700 border border-gray-200/60 hover:border-primary-100 text-[11px] font-medium transition-all">Identification</button>
                                 </div>
                             </div>
-                        </div>
-                        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 modal-actions">
-                            <button @click="createModal = false" type="button" class="btn-secondary">Cancel</button>
-                            <button type="submit" class="btn-primary">Submit Request</button>
-                        </div>
-                    </form>
+                            </div>
+                            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 modal-actions">
+                                <button @click="createModal = false" type="button" class="btn-secondary">Cancel</button>
+                                <button type="submit" class="btn-primary">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </template>
-</div>
+        </template>
+    </div>
 
 {{-- Analytics Summary Cards --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pending Requests</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['pending']) }}</p>
-                <p class="text-[10px] text-amber-500 font-medium mt-0.5 flex items-center gap-1">
+<div class="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Pending Requests</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['pending']) }}</p>
+                <p class="overview-card-caption text-amber-500 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Requires action
                 </p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-amber">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Processing</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['processing']) }}</p>
-                <p class="text-[10px] text-blue-500 font-medium mt-0.5">Currently drafted</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Processing</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['processing']) }}</p>
+                <p class="overview-card-caption text-blue-500">Currently drafted</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-blue">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Released This Month</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['released_month']) }}</p>
-                <p class="text-[10px] text-emerald-500 font-medium mt-0.5">Successfully served</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Released This Month</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['released_month']) }}</p>
+                <p class="overview-card-caption text-emerald-500">Successfully served</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-emerald">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Volume</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total']) }}</p>
-                <p class="text-[10px] text-gray-400 mt-0.5">Lifetime requests</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Total Volume</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['total']) }}</p>
+                <p class="overview-card-caption text-gray-400">Lifetime requests</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-violet">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             </div>
@@ -171,7 +172,7 @@
                    placeholder="Search by resident name..."
                    class="form-input w-full pl-10 pr-4">
         </div>
-        <div class="w-[150px]">
+        <div class="w-full sm:w-[150px]">
             <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
             <select name="status" @change="submitForm()" class="form-input w-full text-sm">
                 <option value="">All Status</option>
@@ -187,8 +188,8 @@
 </div>
 
 {{-- Table --}}
-<div class="glass-card overflow-hidden">
-    <table class="w-full text-sm">
+<div class="glass-card table-shell">
+    <table class="w-full text-sm data-table">
         <thead>
             <tr class="bg-gray-50/40">
                 <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">#</th>
@@ -463,5 +464,17 @@
 </div>
 
 <div class="mt-5">{{ $requests->links() }}</div>
+
+@if($highlightedRequest)
+    <template x-teleport="body">
+        @include('requests.partials.request-details-modal', [
+            'documentRequest' => $highlightedRequest,
+            'modalState' => 'highlightedRequestModal',
+            'closeAction' => "highlightedRequestModal = false; window.history.replaceState({}, '', '" . route('requests.index', request()->except('open_request')) . "')",
+        ])
+    </template>
+@endif
+
+</div>
 
 @endsection

@@ -140,13 +140,13 @@
             {{-- Receipt Summary List --}}
             <div class="space-y-3.5 text-xs">
                 <div class="flex justify-between items-start gap-4">
-                    <span class="text-slate-400 font-medium">Applicant Name</span>
-                    <span class="font-bold text-slate-800 text-right">{{ $docRequest->resident->full_name }}</span>
-                </div>
-                
-                <div class="flex justify-between items-start gap-4">
                     <span class="text-slate-400 font-medium">Requested Document</span>
                     <span class="font-bold text-slate-800 text-right">{{ $docRequest->documentType->name }}</span>
+                </div>
+
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-slate-400 font-medium">Submission Timestamp</span>
+                    <span class="font-bold text-slate-800 text-right">{{ $docRequest->created_at->format('M d, Y h:i A') }}</span>
                 </div>
 
                 <div class="flex justify-between items-start gap-4">

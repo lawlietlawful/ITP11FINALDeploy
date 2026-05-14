@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Resident;
 use App\Models\ActivityLog;
+use App\Models\Resident;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ResidentController extends Controller {
@@ -49,18 +50,17 @@ class ResidentController extends Controller {
                 $dir = $request->sort_dir === 'asc' ? 'asc' : 'desc';
                 $q->orderBy($col, $dir);
             }, function ($q) {
-                $q->latest(); // Default sort: newest first
+                $q->latest();
             })
             ->paginate(5)->withQueryString();
 
-        // Analytics stats
         $stats = [
-            'total'       => Resident::count(),
-            'new_month'   => Resident::where('created_at', '>=', now()->startOfMonth())->count(),
-            'active'      => Resident::whereHas('documentRequests', fn($q) =>
-                                 $q->whereIn('status', ['processing', 'released'])
-                                   ->where('created_at', '>=', now()->subMonths(6))
-                             )->count(),
+            'total' => Resident::count(),
+            'new_month' => Resident::where('created_at', '>=', now()->startOfMonth())->count(),
+            'active' => Resident::whereHas('documentRequests', fn($q) =>
+                $q->whereIn('status', ['processing', 'released'])
+                    ->where('created_at', '>=', now()->subMonths(6))
+            )->count(),
             'total_requests' => \App\Models\DocumentRequest::count(),
         ];
 
@@ -73,20 +73,19 @@ class ResidentController extends Controller {
 
     public function store(Request $request) {
         $validated = $request->validate([
-            'first_name'     => 'required|string|max:100',
-            'middle_name'    => 'nullable|string|max:100',
-            'last_name'      => 'required|string|max:100',
-            'address'        => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
+            'first_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
             'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate'      => 'nullable|date|before_or_equal:today',
-            'gender'         => 'nullable|in:Male,Female',
-            'civil_status'   => 'nullable|in:Single,Married,Widowed,Separated',
+            'birthdate' => 'nullable|date|before_or_equal:today',
+            'gender' => 'nullable|in:Male,Female',
+            'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
         ], [
             'contact_number.regex' => 'Contact number must be a valid PH mobile number (e.g., 09171234567).',
             'birthdate.before_or_equal' => 'Birthdate cannot be in the future.',
         ]);
 
-        // Duplicate detection: same first_name + last_name + address
         $duplicate = Resident::where('first_name', $validated['first_name'])
             ->where('last_name', $validated['last_name'])
             ->where('address', $validated['address'])
@@ -100,7 +99,6 @@ class ResidentController extends Controller {
 
         $resident = Resident::create($validated);
 
-        // Audit trail
         ActivityLog::record(
             action: 'created',
             subject: $resident,
@@ -112,6 +110,7 @@ class ResidentController extends Controller {
 
     public function show(Resident $resident) {
         $requests = $resident->documentRequests()->with('documentType')->latest()->get();
+
         return view('residents.show', compact('resident', 'requests'));
     }
 
@@ -121,14 +120,14 @@ class ResidentController extends Controller {
 
     public function update(Request $request, Resident $resident) {
         $validated = $request->validate([
-            'first_name'     => 'required|string|max:100',
-            'middle_name'    => 'nullable|string|max:100',
-            'last_name'      => 'required|string|max:100',
-            'address'        => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
+            'first_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
             'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate'      => 'nullable|date|before_or_equal:today',
-            'gender'         => 'nullable|in:Male,Female',
-            'civil_status'   => 'nullable|in:Single,Married,Widowed,Separated',
+            'birthdate' => 'nullable|date|before_or_equal:today',
+            'gender' => 'nullable|in:Male,Female',
+            'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
         ], [
             'contact_number.regex' => 'Contact number must be a valid PH mobile number (e.g., 09171234567).',
             'birthdate.before_or_equal' => 'Birthdate cannot be in the future.',
@@ -137,7 +136,6 @@ class ResidentController extends Controller {
         $oldName = $resident->full_name;
         $resident->update($validated);
 
-        // Audit trail
         ActivityLog::record(
             action: 'updated',
             subject: $resident,
@@ -148,21 +146,19 @@ class ResidentController extends Controller {
     }
 
     public function destroy(Resident $resident) {
-        // Safe delete guard: block if resident has active (pending/processing) requests
         $activeRequests = $resident->documentRequests()
             ->whereIn('status', ['pending', 'processing'])
             ->count();
 
         if ($activeRequests > 0) {
             return redirect()->route('residents.index')->with('error',
-                "Cannot delete {$resident->full_name} — they have {$activeRequests} active request(s) still being processed. Please resolve them first."
+                "Cannot delete {$resident->full_name} - they have {$activeRequests} active request(s) still being processed. Please resolve them first."
             );
         }
 
         $name = $resident->full_name;
         $resident->delete();
 
-        // Audit trail
         ActivityLog::record(
             action: 'deleted',
             subject: $resident,
@@ -172,9 +168,6 @@ class ResidentController extends Controller {
         return redirect()->route('residents.index')->with('success', 'Resident deleted.');
     }
 
-    /**
-     * Export all residents as CSV.
-     */
     public function export(): StreamedResponse {
         $residents = Resident::withCount('documentRequests')->latest()->get();
 
@@ -186,30 +179,28 @@ class ResidentController extends Controller {
         return response()->stream(function () use ($residents) {
             $handle = fopen('php://output', 'w');
 
-            // Header row
             fputcsv($handle, [
                 'Resident ID', 'First Name', 'Middle Name', 'Last Name', 'Full Name',
                 'Address', 'Contact Number', 'Gender', 'Civil Status',
                 'Birthdate', 'Age', 'Status', 'Total Requests', 'Date Registered',
             ]);
 
-            // Data rows
-            foreach ($residents as $r) {
+            foreach ($residents as $resident) {
                 fputcsv($handle, [
-                    $r->resident_id ?? '',
-                    $r->first_name,
-                    $r->middle_name ?? '',
-                    $r->last_name,
-                    $r->full_name,
-                    $r->address,
-                    $r->contact_number ?? '',
-                    $r->gender ?? '',
-                    $r->civil_status ?? '',
-                    $r->birthdate?->format('Y-m-d') ?? '',
-                    $r->age ?? '',
-                    $r->status,
-                    $r->document_requests_count,
-                    $r->created_at->format('Y-m-d'),
+                    $this->escapeCsvFormula($resident->resident_id ?? ''),
+                    $this->escapeCsvFormula($resident->first_name),
+                    $this->escapeCsvFormula($resident->middle_name ?? ''),
+                    $this->escapeCsvFormula($resident->last_name),
+                    $this->escapeCsvFormula($resident->full_name),
+                    $this->escapeCsvFormula($resident->address),
+                    $this->escapeCsvFormula($resident->contact_number ?? ''),
+                    $this->escapeCsvFormula($resident->gender ?? ''),
+                    $this->escapeCsvFormula($resident->civil_status ?? ''),
+                    $this->escapeCsvFormula($resident->birthdate?->format('Y-m-d') ?? ''),
+                    $this->escapeCsvFormula($resident->age ?? ''),
+                    $this->escapeCsvFormula($resident->status),
+                    $this->escapeCsvFormula($resident->document_requests_count),
+                    $this->escapeCsvFormula($resident->created_at->format('Y-m-d')),
                 ]);
             }
 
@@ -217,10 +208,6 @@ class ResidentController extends Controller {
         }, 200, $headers);
     }
 
-    /**
-     * Import residents from a CSV file.
-     * Expected columns: first_name, middle_name, last_name, address, contact_number, birthdate, gender, civil_status
-     */
     public function import(Request $request) {
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt|max:2048',
@@ -229,105 +216,96 @@ class ResidentController extends Controller {
         $file = $request->file('csv_file');
         $handle = fopen($file->getRealPath(), 'r');
 
-        // Read header row
         $header = fgetcsv($handle);
-        if (!$header) {
+        if (! $header) {
             fclose($handle);
+
             return back()->with('error', 'CSV file is empty or malformed.');
         }
 
-        // Normalize headers (lowercase, trim, replace spaces with underscores)
-        $header = array_map(fn($h) => strtolower(trim(str_replace(' ', '_', $h))), $header);
+        $header = array_map(fn($value) => strtolower(trim(str_replace(' ', '_', $value))), $header);
 
-        // Required columns check
         $requiredCols = ['first_name', 'last_name', 'address'];
         $missingCols = array_diff($requiredCols, $header);
         if (count($missingCols) > 0) {
             fclose($handle);
+
             return back()->with('error', 'CSV is missing required columns: ' . implode(', ', $missingCols));
         }
 
         $imported = 0;
-        $skipped  = 0;
-        $errors   = [];
-        $rowNum   = 1;
+        $skipped = 0;
+        $errors = [];
+        $rowNum = 1;
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowNum++;
 
-            // Skip empty rows
-            if (count(array_filter($row)) === 0) continue;
-
-            // Map columns to values
-            $data = [];
-            foreach ($header as $i => $col) {
-                $data[$col] = $row[$i] ?? null;
-            }
-
-            // Validate required fields
-            if (empty($data['first_name']) || empty($data['last_name']) || empty($data['address'])) {
-                $skipped++;
-                $errors[] = "Row {$rowNum}: Missing required field(s).";
+            if (count(array_filter($row)) === 0) {
                 continue;
             }
 
-            // Duplicate detection
-            $exists = Resident::where('first_name', $data['first_name'])
-                ->where('last_name', $data['last_name'])
-                ->where('address', $data['address'])
+            $data = [];
+            foreach ($header as $i => $column) {
+                $data[$column] = $row[$i] ?? null;
+            }
+
+            $normalizedData = [
+                'first_name' => trim((string) ($data['first_name'] ?? '')),
+                'middle_name' => $this->nullIfEmpty($data['middle_name'] ?? null),
+                'last_name' => trim((string) ($data['last_name'] ?? '')),
+                'address' => trim((string) ($data['address'] ?? '')),
+                'contact_number' => $this->nullIfEmpty($data['contact_number'] ?? null),
+                'birthdate' => $this->nullIfEmpty($data['birthdate'] ?? null),
+                'gender' => $this->nullIfEmpty($data['gender'] ?? null),
+                'civil_status' => $this->nullIfEmpty($data['civil_status'] ?? null),
+            ];
+
+            $validator = Validator::make($normalizedData, [
+                'first_name' => 'required|string|max:100',
+                'middle_name' => 'nullable|string|max:100',
+                'last_name' => 'required|string|max:100',
+                'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
+                'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
+                'birthdate' => 'nullable|date|before_or_equal:today',
+                'gender' => 'nullable|in:Male,Female',
+                'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                $errors[] = "Row {$rowNum}: " . $validator->errors()->first();
+                continue;
+            }
+
+            $clean = $validator->validated();
+
+            $exists = Resident::where('first_name', $clean['first_name'])
+                ->where('last_name', $clean['last_name'])
+                ->where('address', $clean['address'])
                 ->exists();
 
             if ($exists) {
                 $skipped++;
-                $errors[] = "Row {$rowNum}: Duplicate — {$data['first_name']} {$data['last_name']} at {$data['address']}.";
+                $errors[] = "Row {$rowNum}: Duplicate - {$clean['first_name']} {$clean['last_name']} at {$clean['address']}.";
                 continue;
             }
 
-            // Validate contact number if provided
-            $contact = $data['contact_number'] ?? null;
-            if ($contact && !preg_match('/^09\d{9}$/', $contact)) {
-                $contact = null; // Silently drop invalid numbers
-            }
-
-            // Validate gender
-            $gender = $data['gender'] ?? null;
-            if ($gender && !in_array($gender, ['Male', 'Female'])) {
-                $gender = null;
-            }
-
-            // Validate civil status
-            $civilStatus = $data['civil_status'] ?? null;
-            if ($civilStatus && !in_array($civilStatus, ['Single', 'Married', 'Widowed', 'Separated'])) {
-                $civilStatus = null;
-            }
-
-            // Validate birthdate
-            $birthdate = null;
-            if (!empty($data['birthdate'])) {
-                try {
-                    $birthdate = \Carbon\Carbon::parse($data['birthdate'])->format('Y-m-d');
-                } catch (\Exception $e) {
-                    $birthdate = null;
-                }
-            }
-
-            // Create resident (resident_id auto-generated by model boot)
             Resident::create([
-                'first_name'     => trim($data['first_name']),
-                'middle_name'    => trim($data['middle_name'] ?? ''),
-                'last_name'      => trim($data['last_name']),
-                'address'        => trim($data['address']),
-                'contact_number' => $contact,
-                'birthdate'      => $birthdate,
-                'gender'         => $gender,
-                'civil_status'   => $civilStatus,
+                'first_name' => $clean['first_name'],
+                'middle_name' => $clean['middle_name'] ?? null,
+                'last_name' => $clean['last_name'],
+                'address' => $clean['address'],
+                'contact_number' => $clean['contact_number'] ?? null,
+                'birthdate' => $clean['birthdate'] ?? null,
+                'gender' => $clean['gender'] ?? null,
+                'civil_status' => $clean['civil_status'] ?? null,
             ]);
 
-            // Audit log
             ActivityLog::create([
-                'user_id'     => auth()->id(),
-                'action'      => 'imported',
-                'description' => "Imported resident: {$data['first_name']} {$data['last_name']} (CSV import)",
+                'user_id' => auth()->id(),
+                'action' => 'imported',
+                'description' => "Imported resident: {$clean['first_name']} {$clean['last_name']} (CSV import)",
             ]);
 
             $imported++;
@@ -335,7 +313,7 @@ class ResidentController extends Controller {
 
         fclose($handle);
 
-        $message = "✅ Imported {$imported} resident(s).";
+        $message = "Imported {$imported} resident(s).";
         if ($skipped > 0) {
             $message .= " Skipped {$skipped} row(s): " . implode(' | ', array_slice($errors, 0, 5));
             if (count($errors) > 5) {
@@ -344,5 +322,31 @@ class ResidentController extends Controller {
         }
 
         return back()->with('success', $message);
+    }
+
+    private function escapeCsvFormula(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $trimmed = ltrim($value);
+
+        if ($trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@'], true)) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+    private function nullIfEmpty(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

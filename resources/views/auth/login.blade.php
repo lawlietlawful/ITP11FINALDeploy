@@ -71,10 +71,9 @@
             <p class="text-slate-400 text-sm mb-6 font-medium">Sign in to your admin account</p>
 
             @if($errors->any())
-                <div class="mb-5 bg-rose-50 text-rose-700 border border-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <x-alert type="error" title="Sign In Failed" class="mb-5 rounded-xl shadow-none backdrop-blur-0">
                     {{ $errors->first() }}
-                </div>
+                </x-alert>
             @endif
 
             <form method="POST" action="{{ route('login') }}" class="space-y-5">

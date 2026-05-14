@@ -105,17 +105,16 @@
 
             {{-- Form Errors Banner --}}
             @if($errors->any())
-                <div class="mx-8 mt-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-800 flex gap-3 items-start">
-                    <svg class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    <div>
-                        <span class="text-xs font-bold uppercase tracking-wider block mb-1">Validation Requirements</span>
-                        <ul class="list-disc list-inside text-xs space-y-1 font-medium text-rose-700">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
+                <x-alert type="error" title="Validation Requirements" class="mx-8 mt-6 shadow-none backdrop-blur-0">
+                    <ul class="space-y-1.5 text-xs sm:text-sm">
+                        @foreach($errors->all() as $error)
+                            <li class="flex items-start gap-2">
+                                <span class="mt-[6px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-current opacity-70"></span>
+                                <span>{{ $error }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </x-alert>
             @endif
 
             <form method="POST" action="{{ route('public.submit') }}" class="p-8 space-y-8">

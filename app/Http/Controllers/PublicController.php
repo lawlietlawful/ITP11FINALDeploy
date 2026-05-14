@@ -2,113 +2,149 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\DocumentRequest;
 use App\Models\DocumentType;
 use App\Models\Resident;
-use App\Models\ActivityLog;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 
 class PublicController extends Controller {
 
-    // Public landing page
     public function home() {
         $documentTypes = DocumentType::where('is_active', true)->orderBy('name')->get();
+
         return view('public.home', compact('documentTypes'));
     }
 
-    // Show the request form
     public function requestForm() {
         $documentTypes = DocumentType::where('is_active', true)->orderBy('name')->get();
+
         return view('public.request', compact('documentTypes'));
     }
 
-    // Handle request submission (rate-limited via route middleware)
     public function submitRequest(Request $request) {
-        // ─── Honeypot Check ───
-        // If the hidden 'website' field is filled, it's a bot
         if ($request->filled('website')) {
-            // Silently redirect to success-looking page to fool the bot
+            $this->logPublicSecurityEvent(
+                action: 'blocked',
+                description: 'Blocked public request because the honeypot field was filled.',
+                request: $request,
+            );
+
             return redirect()->route('public.home');
         }
 
         $validated = $request->validate([
-            'first_name'       => 'required|string|max:100',
-            'middle_name'      => 'nullable|string|max:100',
-            'last_name'        => 'required|string|max:100',
-            'address'          => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
-            'contact_number'   => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate'        => 'nullable|date|before:today',
-            'gender'           => 'nullable|in:Male,Female',
-            'civil_status'     => 'nullable|in:Single,Married,Widowed,Separated',
-            'document_type_id' => 'required|exists:document_types,id',
-            'purpose'          => 'required|string|max:500',
+            'first_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
+            'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
+            'birthdate' => 'nullable|date|before:today',
+            'gender' => 'nullable|in:Male,Female',
+            'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
+            'document_type_id' => [
+                'required',
+                Rule::exists('document_types', 'id')->where('is_active', true),
+            ],
+            'purpose' => 'required|string|max:500',
         ], [
             'contact_number.regex' => 'Contact number must be a valid PH mobile number (e.g., 09171234567).',
         ]);
 
-        // Find or create the resident using only validated fields
-        $resident = Resident::firstOrCreate(
-            [
-                'first_name' => $validated['first_name'],
-                'last_name'  => $validated['last_name'],
-            ],
-            [
-                'middle_name'    => $validated['middle_name'] ?? null,
-                'address'        => $validated['address'],
-                'contact_number' => $validated['contact_number'] ?? null,
-                'birthdate'      => $validated['birthdate'] ?? null,
-                'gender'         => $validated['gender'] ?? null,
-                'civil_status'   => $validated['civil_status'] ?? null,
-            ]
-        );
+        $identityLockKey = $this->publicRequestCooldownKey($validated);
+        if (RateLimiter::tooManyAttempts($identityLockKey, 1)) {
+            $seconds = RateLimiter::availableIn($identityLockKey);
 
-        // Update info if resident already exists (keeps data current)
-        $resident->update([
-            'address'        => $validated['address'],
-            'contact_number' => $validated['contact_number'] ?? $resident->contact_number,
-            'middle_name'    => $validated['middle_name'] ?? $resident->middle_name,
-            'gender'         => $validated['gender'] ?? $resident->gender,
-            'civil_status'   => $validated['civil_status'] ?? $resident->civil_status,
-        ]);
+            $this->logPublicSecurityEvent(
+                action: 'throttled',
+                description: "Blocked public request because the identity cooldown is active for another {$seconds} second(s).",
+                request: $request,
+            );
 
-        // ─── Business Rule: Prevent duplicate & excessive requests ───
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'throttle' => "Too many submission attempts for the same details. Please wait {$seconds} second(s) before trying again.",
+                ]);
+        }
 
-        // 1. Check if this resident already has a pending/processing request for the same document type
+        $recentAttempts = RateLimiter::hit($this->publicRequestAttemptsKey($validated), 3600);
+        if ($recentAttempts >= 5) {
+            RateLimiter::hit($identityLockKey, 600);
+
+            $this->logPublicSecurityEvent(
+                action: 'throttled',
+                description: 'Applied public request cooldown after repeated submission attempts for the same identity details.',
+                request: $request,
+            );
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'throttle' => 'Too many submission attempts for the same details. Please wait 600 second(s) before trying again.',
+                ]);
+        }
+
+        $resident = $this->findOrCreateMatchingResident($validated);
+
         $duplicateExists = DocumentRequest::where('resident_id', $resident->id)
             ->where('document_type_id', $validated['document_type_id'])
             ->whereIn('status', ['pending', 'processing'])
             ->exists();
 
         if ($duplicateExists) {
+            $duplicateAttempts = RateLimiter::hit($this->duplicateRequestAttemptsKey($validated), 900);
+
+            if ($duplicateAttempts >= 3) {
+                RateLimiter::hit($identityLockKey, 300);
+            }
+
+            $this->logPublicSecurityEvent(
+                action: 'blocked',
+                description: "Blocked duplicate public request attempt for {$resident->full_name}.",
+                request: $request,
+                subject: $resident,
+            );
+
             $docTypeName = DocumentType::find($validated['document_type_id'])->name ?? 'this document';
+
             return back()->withInput()->withErrors([
                 'document_type_id' => "You already have a pending or processing request for {$docTypeName}. Please wait until it is completed or rejected before submitting a new one.",
             ]);
         }
 
-        // 2. Limit to max 2 requests per day per resident
         $todayCount = DocumentRequest::where('resident_id', $resident->id)
             ->whereDate('created_at', today())
             ->count();
 
         if ($todayCount >= 2) {
+            RateLimiter::hit($identityLockKey, 3600);
+
+            $this->logPublicSecurityEvent(
+                action: 'blocked',
+                description: "Blocked public request because {$resident->full_name} already reached the daily submission cap.",
+                request: $request,
+                subject: $resident,
+            );
+
             return back()->withInput()->withErrors([
                 'throttle' => 'You can only submit up to 2 document requests per day. Please try again tomorrow.',
             ]);
         }
 
-        // Create the document request with tracking code + IP logging
         $docRequest = DocumentRequest::create([
-            'tracking_code'    => DocumentRequest::generateTrackingCode(),
-            'resident_id'      => $resident->id,
+            'tracking_code' => DocumentRequest::generateTrackingCode(),
+            'resident_id' => $resident->id,
             'document_type_id' => $validated['document_type_id'],
-            'purpose'          => $validated['purpose'],
-            'status'           => 'pending',
-            'ip_address'       => $request->ip(),
-            'user_agent'       => $request->userAgent(),
+            'purpose' => $validated['purpose'],
+            'status' => 'pending',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
-        // Log the creation in audit trail
         ActivityLog::record(
             action: 'created',
             subject: $docRequest,
@@ -116,39 +152,156 @@ class PublicController extends Controller {
             description: "Public request submitted by {$resident->full_name}",
         );
 
-        try {
-            \App\Events\DocumentRequestCreated::dispatch($docRequest);
-        } catch (\Throwable $e) {
-            // Broadcasting is non-critical — don't block the request if Reverb is offline
-        }
+        RateLimiter::clear($this->duplicateRequestAttemptsKey($validated));
 
         return redirect()->route('public.success', $docRequest->tracking_code);
     }
 
-    // Success page with tracking code
     public function success(string $trackingCode) {
         $docRequest = DocumentRequest::with(['resident', 'documentType'])
-            ->where('tracking_code', $trackingCode)
+            ->where('tracking_code', strtoupper($trackingCode))
             ->firstOrFail();
 
         return view('public.success', compact('docRequest'));
     }
 
-    // Show tracking form
     public function trackForm() {
         return view('public.track');
     }
 
-    // Handle tracking lookup (rate-limited via route middleware)
     public function track(Request $request) {
         $validated = $request->validate([
-            'tracking_code' => 'required|string|max:20',
+            'tracking_code' => ['required', 'string', 'max:20', 'regex:/^BDRS-[A-F0-9]{10}$/i'],
         ]);
+
+        $lockKey = $this->trackingCooldownKey($request);
+        if (RateLimiter::tooManyAttempts($lockKey, 1)) {
+            $seconds = RateLimiter::availableIn($lockKey);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'tracking_code' => "Too many failed tracking attempts. Please wait {$seconds} second(s) before trying again.",
+                ]);
+        }
 
         $docRequest = DocumentRequest::with(['resident', 'documentType', 'processedBy'])
             ->where('tracking_code', strtoupper($validated['tracking_code']))
             ->first();
 
+        if (! $docRequest) {
+            $attempts = RateLimiter::hit($this->failedTrackingAttemptsKey($request), 600);
+
+            if ($attempts >= 5) {
+                $cooldownSeconds = min(900, 30 * (2 ** min($attempts - 5, 4)));
+                RateLimiter::hit($lockKey, $cooldownSeconds);
+            }
+
+            return view('public.track', [
+                'docRequest' => null,
+                'failedTrackingAttempts' => $attempts,
+            ]);
+        }
+
+        RateLimiter::clear($this->failedTrackingAttemptsKey($request));
+        RateLimiter::clear($lockKey);
+
         return view('public.track', compact('docRequest'));
+    }
+
+    private function failedTrackingAttemptsKey(Request $request): string
+    {
+        return 'public-track-failed:' . sha1((string) $request->ip());
+    }
+
+    private function trackingCooldownKey(Request $request): string
+    {
+        return 'public-track-cooldown:' . sha1((string) $request->ip());
+    }
+
+    private function publicRequestAttemptsKey(array $validated): string
+    {
+        return 'public-request-attempts:' . sha1($this->publicRequestIdentityFingerprint($validated));
+    }
+
+    private function duplicateRequestAttemptsKey(array $validated): string
+    {
+        return 'public-request-duplicate:' . sha1($this->publicRequestIdentityFingerprint($validated) . '|' . $validated['document_type_id']);
+    }
+
+    private function publicRequestCooldownKey(array $validated): string
+    {
+        return 'public-request-cooldown:' . sha1($this->publicRequestIdentityFingerprint($validated));
+    }
+
+    private function publicRequestIdentityFingerprint(array $validated): string
+    {
+        return implode('|', [
+            strtolower(trim($validated['first_name'])),
+            strtolower(trim((string) ($validated['middle_name'] ?? ''))),
+            strtolower(trim($validated['last_name'])),
+            strtolower(trim($validated['address'])),
+            (string) ($validated['birthdate'] ?? ''),
+            strtolower(trim((string) ($validated['gender'] ?? ''))),
+            strtolower(trim((string) ($validated['civil_status'] ?? ''))),
+            preg_replace('/\D+/', '', (string) ($validated['contact_number'] ?? '')),
+        ]);
+    }
+
+    private function findOrCreateMatchingResident(array $validated): Resident
+    {
+        $query = Resident::query()
+            ->where('first_name', $validated['first_name'])
+            ->where('last_name', $validated['last_name'])
+            ->where('address', $validated['address']);
+
+        $this->applyNullableMatch($query, 'middle_name', $validated['middle_name'] ?? null);
+        $this->applyNullableMatch($query, 'contact_number', $validated['contact_number'] ?? null);
+        $this->applyNullableMatch($query, 'gender', $validated['gender'] ?? null);
+        $this->applyNullableMatch($query, 'civil_status', $validated['civil_status'] ?? null);
+
+        if (! empty($validated['birthdate'])) {
+            $query->whereDate('birthdate', $validated['birthdate']);
+        } else {
+            $query->whereNull('birthdate');
+        }
+
+        return $query->first() ?? Resident::create([
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
+            'last_name' => $validated['last_name'],
+            'address' => $validated['address'],
+            'birthdate' => $validated['birthdate'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'civil_status' => $validated['civil_status'] ?? null,
+            'contact_number' => $validated['contact_number'] ?? null,
+        ]);
+    }
+
+    private function applyNullableMatch($query, string $column, mixed $value): void
+    {
+        if ($value === null || $value === '') {
+            $query->whereNull($column);
+            return;
+        }
+
+        $query->where($column, $value);
+    }
+
+    private function logPublicSecurityEvent(
+        string $action,
+        string $description,
+        Request $request,
+        ?Model $subject = null,
+    ): void {
+        ActivityLog::create([
+            'user_id' => null,
+            'action' => $action,
+            'subject_type' => $subject ? get_class($subject) : Resident::class,
+            'subject_id' => $subject?->getKey() ?? 0,
+            'description' => $description,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
     }
 }

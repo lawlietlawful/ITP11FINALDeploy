@@ -61,52 +61,52 @@
     </div>
 
     {{-- Analytics Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 print:hidden">
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Requests</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total_requests']) }}</p>
-                    <p class="text-[10px] text-gray-400 mt-0.5">Filtered total</p>
+    <div class="grid grid-cols-1 gap-4 mb-6 print:hidden sm:grid-cols-2 xl:grid-cols-4">
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Total Requests</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['total_requests']) }}</p>
+                    <p class="overview-card-caption text-gray-400">Filtered total</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <div class="overview-card-icon overview-card-icon-blue">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
             </div>
         </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Revenue</p>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Total Revenue</p>
                     <p class="text-2xl font-extrabold text-emerald-600 mt-1">₱{{ number_format($stats['total_revenue'], 2) }}</p>
-                    <p class="text-[10px] text-emerald-500 font-medium mt-0.5">Estimated</p>
+                    <p class="overview-card-caption text-emerald-500">Estimated</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-            </div>
-        </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Approved / Released</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['approved']) }}</p>
-                    <p class="text-[10px] text-purple-500 font-medium mt-0.5">Completed</p>
-                </div>
-                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div class="overview-card-icon overview-card-icon-emerald">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
             </div>
         </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pending</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['pending']) }}</p>
-                    <p class="text-[10px] text-amber-500 font-medium mt-0.5">Awaiting action</p>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Approved / Released</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['approved']) }}</p>
+                    <p class="overview-card-caption text-violet-500">Completed</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div class="overview-card-icon overview-card-icon-violet">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Pending</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['pending']) }}</p>
+                    <p class="overview-card-caption text-amber-500">Awaiting action</p>
+                </div>
+                <div class="overview-card-icon overview-card-icon-amber">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
             </div>
         </div>
@@ -134,7 +134,7 @@
                            class="form-input w-full pl-10 pr-4">
                 </div>
                 
-                <div class="w-[140px]">
+                <div class="w-full sm:w-[140px]">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
                     <select name="status" @change="submitForm()" class="form-input w-full text-sm">
                         <option value="">All</option>
@@ -144,7 +144,7 @@
                     </select>
                 </div>
                 
-                <div class="w-[180px]">
+                <div class="w-full sm:w-[180px]">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Document Type</label>
                     <select name="document_type_id" @change="submitForm()" class="form-input w-full text-sm">
                         <option value="">All Types</option>
@@ -154,7 +154,7 @@
                     </select>
                 </div>
                 
-                <div class="w-auto flex-shrink-0" x-data="{
+                <div class="w-full lg:w-auto lg:flex-shrink-0" x-data="{
                     setDate(preset) {
                         const today = new Date();
                         let fromDate = new Date();
@@ -189,10 +189,10 @@
                             <button type="button" @click="setDate('year')" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">Year</button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <input type="date" x-ref="dateFrom" name="date_from" value="{{ request('date_from') }}" @change="submitForm()" class="form-input w-[130px] text-sm px-2">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <input type="date" x-ref="dateFrom" name="date_from" value="{{ request('date_from') }}" @change="submitForm()" class="form-input w-full sm:w-[130px] text-sm px-2">
                         <span class="text-gray-400 text-xs">to</span>
-                        <input type="date" x-ref="dateTo" name="date_to" value="{{ request('date_to') }}" @change="submitForm()" class="form-input w-[130px] text-sm px-2">
+                        <input type="date" x-ref="dateTo" name="date_to" value="{{ request('date_to') }}" @change="submitForm()" class="form-input w-full sm:w-[130px] text-sm px-2">
                     </div>
                 </div>
 
@@ -209,10 +209,10 @@
     </div>
 
     {{-- Results Header --}}
-    <div class="flex justify-between items-center mb-3 print:hidden">
+    <div class="flex flex-col gap-3 mb-3 print:hidden lg:flex-row lg:items-center lg:justify-between">
         <p class="text-sm text-gray-400">Showing <strong class="text-gray-600">{{ $requests->count() }}</strong> of <strong class="text-gray-600">{{ $requests->total() }}</strong> results</p>
         
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('reports.export', request()->query()) }}" class="btn-secondary flex items-center gap-2 py-1.5 text-sm" title="Download as CSV">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Export CSV
@@ -225,8 +225,8 @@
     </div>
 
     {{-- Table --}}
-    <div class="glass-card overflow-hidden">
-        <table class="w-full text-sm">
+    <div class="glass-card table-shell">
+        <table class="w-full text-sm data-table">
             <thead>
                 <tr class="bg-gray-50/40">
                     <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">#</th>

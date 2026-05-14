@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Notifications\NewDocumentRequestNotification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class DocumentRequest extends Model {
     protected $fillable = [
@@ -27,6 +30,29 @@ class DocumentRequest extends Model {
     protected $casts = [
         'released_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (DocumentRequest $documentRequest) {
+            $documentRequest->loadMissing(['resident', 'documentType']);
+
+            $admins = User::query()->admin()->get();
+
+            if ($admins->isEmpty()) {
+                return;
+            }
+
+            try {
+                Notification::send($admins, new NewDocumentRequestNotification($documentRequest));
+            } catch (\Throwable $e) {
+                Log::warning('Skipping admin notification broadcast because the realtime service is unavailable.', [
+                    'document_request_id' => $documentRequest->id,
+                    'tracking_code' => $documentRequest->tracking_code,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        });
+    }
 
     // Status constants
     const STATUS_PENDING    = 'pending';

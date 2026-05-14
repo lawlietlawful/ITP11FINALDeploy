@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Document Request Status | VistáBarangay</title>
-    <meta name="description" content="Enter your secure tracking token to check real-time approval status, staff reviews, and collection readiness for your requested document.">
+    <meta name="description" content="Enter your secure tracking token to check real-time approval status and collection readiness for your requested document.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,10 +100,18 @@
             </form>
 
             @if($errors->any())
-                <div class="mt-3 py-2 px-3 rounded-lg bg-rose-50 border border-rose-100 text-center text-xs font-bold text-rose-600">
+                <x-alert type="error" title="Lookup Failed" class="mt-3 mb-0 rounded-xl shadow-none backdrop-blur-0">
                     {{ $errors->first() }}
-                </div>
+                </x-alert>
             @endif
+
+            @isset($failedTrackingAttempts)
+                @if($failedTrackingAttempts >= 3)
+                    <x-alert type="warning" title="Security Notice" class="mt-3 mb-0 rounded-xl shadow-none backdrop-blur-0">
+                        We noticed repeated unsuccessful lookups from this connection. For your security, temporary cooldowns will be applied if the pattern continues.
+                    </x-alert>
+                @endif
+            @endisset
         </div>
 
         {{-- Status Output Card --}}
@@ -166,48 +174,40 @@
                     </div>
 
                     {{-- Data Detail Blocks --}}
-                    <div class="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Token Code</span>
-                            <span class="font-mono font-bold text-sm text-slate-900 block mt-0.5 select-all">{{ $docRequest->tracking_code }}</span>
-                        </div>
+                        <div class="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Token Code</span>
+                                <span class="font-mono font-bold text-sm text-slate-900 block mt-0.5 select-all">{{ $docRequest->tracking_code }}</span>
+                            </div>
 
                         <div>
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Target Document</span>
                             <span class="font-bold text-sm text-slate-900 block mt-0.5">{{ $docRequest->documentType->name }}</span>
                         </div>
 
-                        <div>
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Authenticated Submitter</span>
-                            <span class="font-medium text-sm text-slate-800 block mt-0.5">{{ $docRequest->resident->full_name }}</span>
-                        </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Date Requested</span>
+                                <span class="font-medium text-sm text-slate-800 block mt-0.5">{{ $docRequest->created_at->format('M d, Y h:i A') }}</span>
+                            </div>
 
-                        <div>
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Date Requested</span>
-                            <span class="font-medium text-sm text-slate-800 block mt-0.5">{{ $docRequest->created_at->format('M d, Y h:i A') }}</span>
-                        </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Current Status</span>
+                                <span class="font-medium text-sm text-slate-800 block mt-0.5">{{ ucfirst($docRequest->status) }}</span>
+                            </div>
 
-                        <div class="sm:col-span-2">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Stated Application Intent</span>
-                            <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100/80 mt-1 leading-relaxed">{{ $docRequest->purpose }}</p>
-                        </div>
-
-                        @if($docRequest->released_at)
+                            @if($docRequest->released_at)
                         <div>
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Timestamp Issued / Released</span>
                             <span class="font-bold text-xs text-emerald-600 block mt-0.5">{{ $docRequest->released_at->format('M d, Y h:i A') }}</span>
                         </div>
                         @endif
 
-                        @if($docRequest->rejection_reason)
-                        <div class="sm:col-span-2 border-t border-rose-100/60 pt-4 mt-2">
-                            <span class="text-[11px] font-bold text-rose-500 uppercase tracking-wider block flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                Stated Administrative Discrepancy Reason
-                            </span>
-                            <p class="text-xs font-bold text-rose-800 bg-rose-50 border border-rose-100 p-3 rounded-xl mt-1.5 leading-relaxed">{{ $docRequest->rejection_reason }}</p>
+                        <div class="sm:col-span-2 border-t border-slate-100 pt-4 mt-2">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Privacy Notice</span>
+                            <p class="text-xs text-slate-500 bg-slate-50 border border-slate-100 p-3 rounded-xl mt-1.5 leading-relaxed">
+                                For your security, this public tracker only shows limited request progress information.
+                            </p>
                         </div>
-                        @endif
                     </div>
 
                     {{-- Back/Refresh bar --}}

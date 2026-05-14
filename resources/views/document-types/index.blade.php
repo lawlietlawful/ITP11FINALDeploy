@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 
-<div class="flex items-center justify-between mb-6" x-data="{ createModal: {{ $errors->any() ? 'true' : 'false' }} }">
+<div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between" x-data="{ createModal: {{ $errors->any() ? 'true' : 'false' }} }">
     <div>
         <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Document Types</h1>
         <p class="text-sm text-gray-400 mt-1">Manage available barangay documents</p>
@@ -88,58 +88,58 @@
 </div>
 
 {{-- Analytics Summary Cards --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Types</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total']) }}</p>
-                <p class="text-[10px] text-gray-400 mt-0.5">All created documents</p>
+<div class="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Total Types</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['total']) }}</p>
+                <p class="overview-card-caption text-gray-400">All created documents</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-violet">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Active</p>
-                <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['active']) }}</p>
-                <p class="text-[10px] text-emerald-500 font-medium mt-0.5">Currently available</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Active</p>
+                <p class="overview-card-value mt-1">{{ number_format($stats['active']) }}</p>
+                <p class="overview-card-caption text-emerald-500">Currently available</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-emerald">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Most Requested</p>
-                <p class="text-xl font-extrabold text-gray-900 mt-1 truncate max-w-[120px]" title="{{ $stats['most_requested'] }}">{{ $stats['most_requested'] }}</p>
-                <p class="text-[10px] text-blue-500 font-medium mt-0.5">Highest volume</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Most Requested</p>
+                <p class="text-xl font-extrabold text-gray-900 mt-1 truncate max-w-[180px]" title="{{ $stats['most_requested'] }}">{{ $stats['most_requested'] }}</p>
+                <p class="overview-card-caption text-blue-500">Highest volume</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-blue">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
             </div>
         </div>
     </div>
-    <div class="stat-card p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Revenue</p>
+    <div class="stat-card overview-card">
+        <div class="overview-card-body">
+            <div class="min-w-0 flex-1">
+                <p class="overview-card-kicker">Total Revenue</p>
                 <p class="text-2xl font-extrabold text-gray-900 mt-1">₱{{ number_format($stats['total_revenue'], 2) }}</p>
-                <p class="text-[10px] text-amber-500 font-medium mt-0.5">From released docs</p>
+                <p class="overview-card-caption text-amber-500">From released docs</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="overview-card-icon overview-card-icon-amber">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
@@ -167,7 +167,7 @@
                    placeholder="Search by name..."
                    class="form-input w-full pl-10 pr-4">
         </div>
-        <div class="w-[150px]">
+        <div class="w-full sm:w-[150px]">
             <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</label>
             <select name="status" @change="submitForm()" class="form-input w-full text-sm">
                 <option value="">All Status</option>
@@ -181,8 +181,8 @@
     </form>
 </div>
 
-<div class="glass-card overflow-hidden">
-    <table class="w-full text-sm">
+<div class="glass-card table-shell">
+    <table class="w-full text-sm data-table">
         <thead>
             <tr class="bg-gray-50/40">
                 <th class="px-4 py-3 w-10 text-center"></th>

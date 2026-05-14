@@ -2,39 +2,100 @@
 @section('content')
 
 {{-- Page Header --}}
-<div class="mb-7 flex justify-between items-start">
+<div class="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
     <div>
         <p class="text-primary-600 text-sm font-medium mb-1">Welcome back, {{ Auth::user()->name }}!</p>
         <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
     </div>
 
     {{-- Top Right Actions (Dashboard Only) --}}
-    <div class="flex items-center gap-3">
+    <div class="flex items-center justify-end gap-3 self-end sm:self-auto relative z-50">
         
         {{-- Notification Dropdown --}}
         <div x-data="{
                 open: false,
-                unreadCount: {{ $notifications->count() }},
-                items: {{ json_encode($notifications->map(fn($n) => [
-                    'id' => $n->id,
-                    'resident_name' => $n->resident->full_name,
-                    'document_name' => $n->documentType->name,
-                    'created_at' => $n->created_at->diffForHumans()
-                ])) }}
+                unreadCount: {{ $unreadNotificationCount }},
+                items: {{ Js::from($notificationItems) }},
+                markAllReadUrl: '{{ route('notifications.markAllRead') }}',
+                csrfToken: document.querySelector('meta[name=csrf-token]')?.content,
+                markingRead: false,
+                syncUnreadState() {
+                    this.unreadCount = this.items.filter((item) => !item.read_at).length;
+                },
+                markAllRead() {
+                    if (this.markingRead || this.unreadCount === 0) {
+                        return;
+                    }
+
+                    this.markingRead = true;
+
+                    fetch(this.markAllReadUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken,
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then((response) => response.ok ? response.json() : Promise.reject(response))
+                    .then((payload) => {
+                        this.items = this.items.map((item) => ({
+                            ...item,
+                            read_at: item.read_at ?? payload.read_at,
+                        }));
+                        this.syncUnreadState();
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        this.markingRead = false;
+                    });
+                },
+                handleIncoming(notification) {
+                    const requestId = notification.request_id ?? notification.data?.request_id ?? null;
+                    const item = {
+                        id: notification.id,
+                        request_id: requestId,
+                        resident_name: notification.resident_name ?? notification.data?.resident_name ?? 'Resident',
+                        document_name: notification.document_name ?? notification.data?.document_name ?? 'Document',
+                        message: notification.message ?? notification.data?.message ?? 'New document request received.',
+                        request_url: requestId
+                            ? '{{ route('requests.index') }}?open_request=' + requestId
+                            : (notification.request_url ?? notification.data?.request_url ?? '{{ route('requests.index') }}'),
+                        created_at: notification.created_at_human ?? notification.data?.created_at_human ?? 'Just now',
+                        created_at_iso: notification.created_at_iso ?? notification.data?.created_at_iso ?? new Date().toISOString(),
+                        read_at: null,
+                    };
+
+                    this.items = [item, ...this.items.filter((existing) => existing.id !== item.id)].slice(0, 10);
+                    this.syncUnreadState();
+                }
             }"
             x-init="
                 if (typeof window.Echo !== 'undefined') {
-                    window.Echo.private('admin-notifications')
-                        .listen('.DocumentRequestCreated', (e) => {
-                            items.unshift(e);
-                            unreadCount++;
+                    window.Echo.private('App.Models.User.{{ Auth::id() }}')
+                        .notification((notification) => {
+                            handleIncoming(notification);
                         });
                 }
             "
             class="relative">
-            <button @click="open = !open" @click.away="open = false" class="relative w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary-600 bg-white hover:bg-gray-50 rounded-full transition-all shadow-sm border border-gray-100/80 backdrop-blur-sm">
-                <svg class="w-[20px] h-[20px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                <span x-show="unreadCount > 0" x-transition class="absolute top-2 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" style="display: none;"></span>
+            <button
+                @click="
+                    open = !open;
+                    if (open) {
+                        markAllRead();
+                    }
+                "
+                @click.away="open = false"
+                class="relative w-11 h-11 flex items-center justify-center text-gray-500 hover:text-primary-600 bg-white/90 hover:bg-white rounded-full transition-all shadow-sm hover:shadow-md border border-gray-200/80 backdrop-blur-sm group">
+                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                
+                {{-- Fixed Notification Dot with Ping Animation --}}
+                <span x-show="unreadCount > 0" x-transition class="absolute top-[8px] right-[10px] flex h-2.5 w-2.5" style="display: none;">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 border-2 border-white shadow-sm"></span>
+                </span>
             </button>
             
             {{-- Dropdown Content --}}
@@ -45,9 +106,13 @@
                 </div>
                 <div class="max-h-[300px] overflow-y-auto">
                     <template x-for="notif in items" :key="notif.id">
-                        <a href="{{ route('requests.index') }}" class="block px-4 py-3 border-b border-gray-50 hover:bg-gray-50/80 transition-colors">
-                            <p class="text-[13px] font-semibold text-gray-800" x-text="notif.resident_name"></p>
+                        <a :href="notif.request_url" class="block px-4 py-3 border-b border-gray-50 hover:bg-gray-50/80 transition-colors" :class="{ 'bg-primary-50/40': !notif.read_at }">
+                            <div class="flex items-start justify-between gap-3">
+                                <p class="text-[13px] font-semibold text-gray-800" x-text="notif.resident_name"></p>
+                                <span x-show="!notif.read_at" class="mt-1 inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+                            </div>
                             <p class="text-[12px] text-gray-500 mt-0.5">Requested: <span x-text="notif.document_name"></span></p>
+                            <p class="text-[12px] text-gray-500 mt-1 leading-relaxed" x-text="notif.message"></p>
                             <p class="text-[10px] text-gray-400 mt-1.5" x-text="notif.created_at"></p>
                         </a>
                     </template>
@@ -62,13 +127,47 @@
         </div>
 
         {{-- Profile Info --}}
-        <div class="flex items-center gap-2.5 bg-white/80 border border-gray-100/80 pr-4 pl-1 h-10 rounded-full shadow-sm backdrop-blur-sm">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">
-                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+        <div class="group flex items-center gap-3 bg-white/90 border border-gray-200/80 pr-4 pl-1.5 h-11 rounded-full shadow-sm hover:shadow-md hover:bg-white cursor-pointer transition-all backdrop-blur-sm relative"
+             x-data="{ openProfile: false }" @click.away="openProfile = false">
+            <div @click="openProfile = !openProfile" class="flex items-center gap-3 w-full h-full">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-extrabold text-[13px] shadow-inner group-hover:scale-105 transition-transform overflow-hidden">
+                    @if(Auth::user()->profile_photo_url)
+                        <img src="{{ Auth::user()->profile_photo_url }}" alt="Profile" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    @endif
+                </div>
+                <div class="text-left hidden sm:block">
+                    <p class="text-[13px] font-bold text-gray-900 leading-none mb-0.5">{{ Auth::user()->name }}</p>
+                    <p class="text-[10px] text-primary-600 font-bold tracking-wider uppercase leading-none">Administrator</p>
+                </div>
             </div>
-            <div class="text-left hidden sm:block">
-                <p class="text-[12px] font-bold text-gray-800 leading-tight">{{ Auth::user()->name }}</p>
-                <p class="text-[9px] text-gray-500 font-bold tracking-wider uppercase mt-0.5">Administrator</p>
+            
+            {{-- Profile Dropdown --}}
+            <div x-show="openProfile" x-transition.opacity.duration.200ms class="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden" style="display: none;">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <p class="text-sm font-bold text-gray-900">{{ Auth::user()->name }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                </div>
+                <div class="py-1">
+                    <a href="{{ route('profile.index') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        My Profile
+                    </a>
+                    <a href="{{ route('settings.index') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Settings
+                    </a>
+                </div>
+                <div class="border-t border-gray-100 py-1">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-rose-600 font-semibold hover:bg-rose-50 hover:text-rose-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            Log out
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -76,51 +175,91 @@
 
 <div class="space-y-6">
 
-    {{-- Top Features Row (4 compact cards) --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <div class="glass-card p-4 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-violet-50 flex items-center justify-center text-violet-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    {{-- Actionable KPIs Row (Fluid Grid) --}}
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+    
+    {{-- Card 1: Today's Live Queue --}}
+    <div class="glass-card stat-card overview-card group">
+        <div class="overview-card-body">
+        <div class="min-w-0 flex-1">
+            <p class="overview-card-kicker">Today's Live Queue</p>
+            <div class="flex items-baseline gap-2">
+                <h3 class="overview-card-value">{{ $stats['today_received'] ?? 0 }}</h3>
+                <span class="text-sm font-semibold text-gray-400">/ {{ $stats['today_completed'] ?? 0 }} Done</span>
             </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Residents</p>
-                <h3 class="text-2xl font-bold text-gray-900">{{ $stats['total_residents'] }}</h3>
-            </div>
-        </div>
-
-        <div class="glass-card p-4 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Requests</p>
-                <h3 class="text-2xl font-bold text-gray-900">{{ $stats['total_requests'] }}</h3>
-            </div>
-        </div>
-
-        <div class="glass-card p-4 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pending Action</p>
-                <h3 class="text-2xl font-bold text-gray-900">{{ $stats['pending'] }}</h3>
+            <div class="mt-2 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                @php 
+                    $rcv = $stats['today_received'] ?? 0;
+                    $cmp = $stats['today_completed'] ?? 0;
+                    $queuePercent = $rcv > 0 ? min(100, ($cmp / $rcv) * 100) : 0; 
+                @endphp
+                <div class="h-full bg-blue-500 rounded-full transition-all duration-1000" style="width: {{ $queuePercent }}%;"></div>
             </div>
         </div>
-
-        <div class="glass-card p-4 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Monthly Revenue</p>
-                <h3 class="text-xl font-bold text-gray-900">₱{{ number_format($stats['monthly_revenue'], 2) }}</h3>
-            </div>
+        <div class="overview-card-icon overview-card-icon-blue">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
         </div>
     </div>
 
-    {{-- Analytics Row --}}
+    {{-- Card 2: Ready for Pickup --}}
+    <div class="glass-card stat-card overview-card group">
+        <div class="overview-card-body">
+        <div class="min-w-0 flex-1">
+            <p class="overview-card-kicker">Ready for Pickup</p>
+            <h3 class="overview-card-value">{{ $stats['ready_for_pickup'] ?? 0 }}</h3>
+            <p class="overview-card-caption text-emerald-600 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Awaiting claim by resident
+            </p>
+        </div>
+        <div class="overview-card-icon overview-card-icon-emerald">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        </div>
+    </div>
+
+    {{-- Card 3: Urgent Pending (Bottlenecks) --}}
+    <div class="glass-card stat-card overview-card group relative overflow-hidden">
+        @if(($stats['urgent_pending'] ?? 0) > 0)
+            <div class="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none"></div>
+        @endif
+        <div class="overview-card-body relative z-10">
+        <div class="min-w-0 flex-1">
+            <p class="overview-card-kicker">Urgent Pending</p>
+            <h3 class="overview-card-value {{ ($stats['urgent_pending'] ?? 0) > 0 ? 'text-rose-600' : 'text-gray-900' }}">{{ $stats['urgent_pending'] ?? 0 }}</h3>
+            <p class="overview-card-caption text-rose-500 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Delayed > 24 Hours
+            </p>
+        </div>
+        <div class="overview-card-icon {{ ($stats['urgent_pending'] ?? 0) > 0 ? 'overview-card-icon-rose animate-bounce' : 'overview-card-icon-amber' }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        </div>
+    </div>
+
+    {{-- Card 4: Processing Efficiency --}}
+    <div class="glass-card stat-card overview-card group">
+        <div class="overview-card-body">
+        <div class="min-w-0 flex-1">
+            <p class="overview-card-kicker">Avg. Processing Time</p>
+            <div class="flex items-baseline gap-1.5">
+                <h3 class="overview-card-value">{{ number_format($stats['avg_processing_hours'] ?? 0, 1) }}</h3>
+                <span class="text-sm font-bold text-gray-400">Hrs</span>
+            </div>
+            <p class="overview-card-caption text-violet-600 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Overall turn-around
+            </p>
+        </div>
+        <div class="overview-card-icon overview-card-icon-violet">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        </div>
+        </div>
+    </div>
+</div>
+{{-- Analytics Row --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {{-- Line Chart: Requests Over Time --}}
@@ -144,42 +283,82 @@
     {{-- Bottom Row --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {{-- Recent Requests Table (2/3 width) --}}
-        <div class="glass-card overflow-hidden lg:col-span-2">
-            <div class="px-6 py-4 border-b border-gray-100/60 flex items-center justify-between bg-white/50">
-                <h2 class="text-[15px] font-semibold text-gray-900">Recent Requests</h2>
-                <a href="{{ route('requests.index') }}" class="text-[12px] font-semibold text-primary-600 hover:text-primary-700 uppercase tracking-wider transition-colors bg-primary-50 px-3 py-1.5 rounded-lg">View All</a>
+        {{-- Live Activity Feed (2/3 width) --}}
+        <div
+            x-data="{
+                items: {{ Js::from($activityItems) }},
+                iconPath(icon) {
+                    return {
+                        created: 'M12 4v16m8-8H4',
+                        released: 'M5 13l4 4L19 7',
+                        approved: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                        rejected: 'M6 18L18 6M6 6l12 12',
+                        info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                    }[icon] ?? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+                },
+                prependActivity(activity) {
+                    this.items = [activity, ...this.items.filter((item) => item.id !== activity.id)].slice(0, 20);
+                }
+            }"
+            x-init="
+                if (typeof window.Echo !== 'undefined') {
+                    window.Echo.private('admin-dashboard')
+                        .listen('.ActivityLogCreated', (activity) => {
+                            prependActivity(activity);
+                        });
+                }
+            "
+            class="glass-card overflow-hidden lg:col-span-2 flex flex-col h-[380px]">
+            <div class="px-6 py-4 border-b border-gray-100/60 flex items-center justify-between bg-white/50 shrink-0 shadow-sm z-10">
+                <div class="flex items-center gap-2.5">
+                    <h2 class="text-[15px] font-semibold text-gray-900">Live Activity Feed</h2>
+                    <span class="flex h-2 w-2 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-50/40 border-b border-gray-100/60">
-                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Resident</th>
-                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Document</th>
-                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50/80">
-                        @forelse($recent as $req)
-                        <tr class="table-row hover:bg-gray-50/30 transition-colors">
-                            <td class="px-6 py-3.5 font-medium text-gray-900">{{ $req->resident->full_name }}</td>
-                            <td class="px-6 py-3.5 text-gray-600">{{ $req->documentType->name }}</td>
-                            <td class="px-6 py-3.5">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $req->status_badge }}">
-                                    {{ $req->status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-3.5 text-gray-400">{{ $req->created_at->format('M d, Y') }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="4" class="px-6 py-12 text-center text-gray-400">
-                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                            No requests yet.
-                        </td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            
+            <div class="flex-1 overflow-y-auto px-2 py-4 custom-scrollbar">
+                <style>
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 4px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background-color: #cbd5e1;
+                        border-radius: 10px;
+                    }
+                </style>
+                <div class="px-4">
+                    <template x-for="activity in items" :key="activity.id">
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10" :class="activity.action_badge">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="iconPath(activity.action_icon)"></path>
+                                </svg>
+                            </div>
+                            <div class="w-px h-full bg-gray-100 -my-1 z-0"></div>
+                        </div>
+                        <div class="flex-1 pb-6 pt-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-[13px] font-semibold text-gray-900" x-text="activity.title"></h4>
+                                    <span x-show="activity.transition_label" class="text-[10px] text-gray-400 font-medium" x-text="activity.transition_label"></span>
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-medium" x-text="activity.created_at_human"></span>
+                            </div>
+                            <p class="text-[12px] text-gray-600 leading-relaxed" x-text="activity.description"></p>
+                        </div>
+                    </div>
+                    </template>
+                    <div class="text-center py-8">
+                        <p x-show="items.length === 0" class="text-sm text-gray-400" style="display: none;">No recent activity.</p>
+                    </div>
+                </div>
             </div>
         </div>
 

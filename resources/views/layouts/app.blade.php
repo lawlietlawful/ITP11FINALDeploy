@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>VistáBarangay - Document Request System</title>
     <meta name="description" content="VistáBarangay - Manage residents and process official barangay documents">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -113,6 +114,118 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
         }
 
+        .overview-card {
+            padding: 1rem;
+        }
+
+        .overview-card-body {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .overview-card-kicker {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 0.35rem;
+        }
+
+        .overview-card-value {
+            font-size: 2rem;
+            line-height: 1;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .overview-card-caption {
+            margin-top: 0.45rem;
+            font-size: 0.6875rem;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+
+        .overview-card-icon {
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 1.15rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            flex-shrink: 0;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .overview-card:hover .overview-card-icon {
+            transform: scale(1.06);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 20px rgba(148, 163, 184, 0.12);
+        }
+
+        .overview-card-icon svg {
+            width: 1.4rem;
+            height: 1.4rem;
+        }
+
+        .overview-card-icon-blue {
+            background: linear-gradient(135deg, rgba(219, 234, 254, 0.9) 0%, rgba(239, 246, 255, 1) 100%);
+            border-color: rgba(191, 219, 254, 0.95);
+            color: #2563eb;
+        }
+
+        .overview-card-icon-emerald {
+            background: linear-gradient(135deg, rgba(209, 250, 229, 0.95) 0%, rgba(236, 253, 245, 1) 100%);
+            border-color: rgba(167, 243, 208, 0.95);
+            color: #059669;
+        }
+
+        .overview-card-icon-amber {
+            background: linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(255, 251, 235, 1) 100%);
+            border-color: rgba(252, 211, 77, 0.35);
+            color: #d97706;
+        }
+
+        .overview-card-icon-violet {
+            background: linear-gradient(135deg, rgba(237, 233, 254, 0.95) 0%, rgba(245, 243, 255, 1) 100%);
+            border-color: rgba(221, 214, 254, 0.95);
+            color: #7c3aed;
+        }
+
+        .overview-card-icon-rose {
+            background: linear-gradient(135deg, rgba(255, 228, 230, 0.95) 0%, rgba(255, 241, 242, 1) 100%);
+            border-color: rgba(254, 205, 211, 0.95);
+            color: #e11d48;
+        }
+
+        .table-shell {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .data-table {
+            min-width: 760px;
+        }
+
+        @media (max-width: 768px) {
+            .overview-card {
+                padding: 0.9rem;
+            }
+
+            .overview-card-value {
+                font-size: 1.75rem;
+            }
+
+            .overview-card-icon {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 1rem;
+            }
+        }
+
         /* Table */
         .table-row { transition: all 0.15s ease; }
         .table-row:hover { background: rgba(240, 247, 255, 0.6); }
@@ -140,6 +253,7 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
         
         .sidebar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
+        [x-cloak] { display: none !important; }
 
         /* Input styling */
         .form-input {
@@ -304,78 +418,41 @@
         </aside>
 
         {{-- Main Content --}}
-        <main class="flex-1 p-5 lg:p-7 h-screen overflow-hidden fade-in flex flex-col"
-              x-data="{
-                  hasNewUpdates: false,
-                  initialCount: null,
-                  initPolling() {
-                      fetch('{{ route('requests.checkUpdates') }}')
-                          .then(res => res.json())
-                          .then(data => {
-                              this.initialCount = data.total;
-                          }).catch(() => {});
-                      
-                      setInterval(() => {
-                          if (this.initialCount !== null) {
-                              fetch('{{ route('requests.checkUpdates') }}')
-                                  .then(res => res.json())
-                                  .then(data => {
-                                      if (data.total > this.initialCount) {
-                                          this.hasNewUpdates = true;
-                                      }
-                                  }).catch(() => {});
-                          }
-                      }, 10000);
-                  }
-              }"
-              x-init="initPolling()">
-            
-            {{-- Global Real-Time Alert Banner --}}
-            <div x-show="hasNewUpdates" x-transition.translate.top 
-                 class="mb-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-5 py-3 rounded-2xl shadow-lg flex items-center justify-between gap-4 border border-primary-400/30"
-                 style="display: none;">
-                <div class="flex items-center gap-3">
-                    <span class="flex h-3 w-3 relative flex-shrink-0">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                    </span>
-                    <div>
-                        <p class="text-sm font-bold tracking-wide">New constituent request(s) received!</p>
-                        <p class="text-[11px] text-primary-100 font-medium">System data has been updated in the background.</p>
-                    </div>
-                </div>
-                <button @click="window.location.reload()" class="bg-white text-primary-700 hover:bg-primary-50 px-4 py-1.5 rounded-xl text-xs font-bold shadow transition-all hover:scale-105 active:scale-95 flex-shrink-0">
-                    🔄 Refresh Dashboard
-                </button>
-            </div>
-
+        <main class="flex-1 p-5 lg:p-7 h-screen overflow-hidden fade-in flex flex-col">
             <div class="main-content-area p-6 lg:p-8 flex-1 overflow-y-auto">
 
                 {{-- Flash Messages --}}
-                @if(session('success'))
-                    <div class="mb-5 bg-accent-50/80 text-accent-800 border border-accent-200/60 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-sm backdrop-blur-sm" id="flash-success">
-                        <svg class="w-5 h-5 text-accent-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="text-sm font-medium">{{ session('success') }}</span>
-                    </div>
-                    <script>setTimeout(() => { const el = document.getElementById('flash-success'); if(el) el.style.display='none'; }, 4000);</script>
-                @endif
+                <div class="pointer-events-none fixed right-5 top-5 z-50 flex w-[min(100%-2rem,22rem)] flex-col gap-2.5 sm:right-7 sm:top-7">
+                    @if(session('success'))
+                        <x-alert type="success" :autohide="4200">
+                            {{ session('success') }}
+                        </x-alert>
+                    @endif
 
-                @if(session('error'))
-                    <div class="mb-5 bg-red-50/80 text-red-800 border border-red-200/60 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-sm backdrop-blur-sm" id="flash-error">
-                        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="text-sm font-medium">{{ session('error') }}</span>
-                    </div>
-                    <script>setTimeout(() => { const el = document.getElementById('flash-error'); if(el) el.style.display='none'; }, 5000);</script>
-                @endif
+                    @if(session('warning'))
+                        <x-alert type="warning" title="Please Review" :autohide="5200">
+                            {{ session('warning') }}
+                        </x-alert>
+                    @endif
+
+                    @if(session('error'))
+                        <x-alert type="error" :autohide="5600">
+                            {{ session('error') }}
+                        </x-alert>
+                    @endif
+                </div>
 
                 @if($errors->any())
-                    <div class="mb-5 bg-red-50/80 text-red-800 border border-red-200/60 px-5 py-3 rounded-2xl shadow-sm backdrop-blur-sm">
-                        <ul class="list-disc list-inside text-sm space-y-1">
+                    <x-alert type="error" title="Please Correct The Following" class="mb-5">
+                        <ul class="space-y-1.5">
                             @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                <li class="flex items-start gap-2">
+                                    <span class="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-current opacity-70"></span>
+                                    <span>{{ $error }}</span>
+                                </li>
                             @endforeach
                         </ul>
-                    </div>
+                    </x-alert>
                 @endif
 
                 @yield('content')

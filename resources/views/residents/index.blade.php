@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('content')
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Residents</h1>
             <p class="text-sm text-gray-400 mt-1">Manage barangay resident records</p>
         </div>
-        <div class="flex items-center gap-3"
+        <div class="flex flex-wrap items-center gap-3"
             x-data="{ importModal: false, createModal: {{ $errors->any() ? 'true' : 'false' }} }">
             @if(auth()->user()->role === 'admin')
                 <a href="{{ route('residents.export') }}" class="btn-secondary inline-flex items-center gap-2">
@@ -212,82 +212,60 @@
         </div>
     </div>
 
-    {{-- Flash Messages --}}
-    @if(session('warning'))
-        <div
-            class="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium flex items-center gap-2">
-            <svg class="w-5 h-5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            {{ session('warning') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div
-            class="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-medium flex items-center gap-2">
-            <svg class="w-5 h-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {{ session('error') }}
-        </div>
-    @endif
-
     {{-- Search --}}
     {{-- Analytics Summary Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Residents</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total']) }}</p>
+    <div class="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Total Residents</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['total']) }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="overview-card-icon overview-card-icon-blue">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                 </div>
             </div>
         </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">New This Month</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['new_month']) }}</p>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">New This Month</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['new_month']) }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="overview-card-icon overview-card-icon-amber">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
                 </div>
             </div>
         </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Active Residents</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['active']) }}</p>
-                    <p class="text-[10px] text-gray-400 mt-0.5">Requested in last 6 months</p>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Active Residents</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['active']) }}</p>
+                    <p class="overview-card-caption text-gray-400">Requested in last 6 months</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="overview-card-icon overview-card-icon-emerald">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
         </div>
-        <div class="stat-card p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Requests</p>
-                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($stats['total_requests']) }}</p>
+        <div class="stat-card overview-card">
+            <div class="overview-card-body">
+                <div class="min-w-0 flex-1">
+                    <p class="overview-card-kicker">Total Requests</p>
+                    <p class="overview-card-value mt-1">{{ number_format($stats['total_requests']) }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="overview-card-icon overview-card-icon-violet">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -376,8 +354,8 @@
     </div>
 
     {{-- Table --}}
-    <div class="glass-card overflow-hidden">
-        <table class="w-full text-sm">
+    <div class="glass-card table-shell">
+        <table class="w-full text-sm data-table">
             <thead>
                 @php
                     $currentSort = request('sort_by');

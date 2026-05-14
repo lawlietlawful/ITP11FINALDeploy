@@ -6,6 +6,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('admin-notifications', function ($user) {
-    return $user != null; // Any authenticated user
+Broadcast::channel('admin-dashboard', function ($user) {
+    return $user->role === 'admin';
 });

@@ -24,6 +24,13 @@ class DocumentRequestController extends Controller {
             ->paginate(5)
             ->withQueryString();
 
+        $highlightedRequest = null;
+
+        if ($request->filled('open_request')) {
+            $highlightedRequest = DocumentRequest::with(['resident', 'documentType', 'processedBy'])
+                ->find($request->integer('open_request'));
+        }
+
         $residents     = Resident::orderBy('last_name')->get();
         $documentTypes = DocumentType::where('is_active', true)->orderBy('name')->get();
 
@@ -36,7 +43,7 @@ class DocumentRequestController extends Controller {
             'total'          => DocumentRequest::count(),
         ];
 
-        return view('requests.index', compact('requests', 'residents', 'documentTypes', 'stats'));
+        return view('requests.index', compact('requests', 'residents', 'documentTypes', 'stats', 'highlightedRequest'));
     }
 
     public function create() {
@@ -82,12 +89,6 @@ class DocumentRequestController extends Controller {
             description: "Admin-created request for resident #{$validated['resident_id']}",
         );
 
-        try {
-            \App\Events\DocumentRequestCreated::dispatch($docRequest);
-        } catch (\Throwable $e) {
-            // Broadcasting is non-critical — don't block the request if Reverb is offline
-        }
-
         return redirect()->route('requests.index')->with('success', 'Request created successfully.');
     }
 
@@ -104,7 +105,7 @@ class DocumentRequestController extends Controller {
         return view('requests.show', compact('request_item', 'auditLogs'));
     }
 
-    // Approve → processing (admin & staff)
+    // Approve → processing (admin only)
     public function approve(DocumentRequest $request_item) {
         $oldStatus = $request_item->status;
 
@@ -125,7 +126,7 @@ class DocumentRequestController extends Controller {
         return back()->with('success', 'Request approved and marked as processing.');
     }
 
-    // Release → released (admin & staff)
+    // Release → released (admin only)
     public function release(DocumentRequest $request_item) {
         $oldStatus = $request_item->status;
 
@@ -146,7 +147,7 @@ class DocumentRequestController extends Controller {
         return back()->with('success', 'Document marked as released.');
     }
 
-    // Reject → rejected (admin & staff)
+    // Reject → rejected (admin only)
     public function reject(Request $request, DocumentRequest $request_item) {
         $validated = $request->validate([
             'rejection_reason' => 'required|string|max:500',
@@ -192,12 +193,4 @@ class DocumentRequestController extends Controller {
         return view('requests.print', compact('request_item'));
     }
 
-    // Real-time polling API endpoint for checking global entry counters
-    public function checkUpdates() {
-        return response()->json([
-            'pending' => DocumentRequest::where('status', 'pending')->count(),
-            'total'   => DocumentRequest::count(),
-            'time'    => now()->format('h:i:s A'),
-        ]);
-    }
 }

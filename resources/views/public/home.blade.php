@@ -339,7 +339,7 @@
             <div class="absolute right-0 top-0 w-64 h-64 bg-brand-500/10 rounded-full blur-2xl"></div>
             <div class="relative z-10 text-center sm:text-left">
                 <h3 class="font-bold text-lg text-white mb-1">Need manual verification assistance?</h3>
-                <p class="text-slate-400 text-sm max-w-md">Our barangay administration staff is available during standard business hours to assist you directly.</p>
+                <p class="text-slate-400 text-sm max-w-md">Our barangay administration team is available during standard business hours to assist you directly.</p>
             </div>
             <a href="tel:1234567" class="relative z-10 px-5 py-3 rounded-xl font-bold text-xs bg-brand-500 hover:bg-brand-400 text-white transition-colors whitespace-nowrap shadow-lg shadow-brand-500/30">
                 📞 Call Front Desk
@@ -374,11 +374,7 @@
                 <p class="text-[11px] text-slate-500 leading-normal">
                     Authorized actions enforce role validation layers and secure event tracking to audit all platform behaviors.
                 </p>
-                <div class="pt-2">
-                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-colors">
-                        🔒 Admin Gateway
-                    </a>
-                </div>
+
             </div>
         </div>
 
