@@ -131,25 +131,30 @@ class DocumentRequestController extends Controller {
     public function readyForPickup(DocumentRequest $request_item) {
         $oldStatus = $request_item->status;
 
-        $request_item->update([
-            'status'       => 'ready_to_pickup',
-            'processed_by' => Auth::id(),
-        ]);
+        try {
+            $request_item->update([
+                'status'       => 'ready_to_pickup',
+                'processed_by' => Auth::id(),
+            ]);
 
-        // Audit log
-        ActivityLog::record(
-            action: 'ready_for_pickup',
-            subject: $request_item,
-            oldStatus: $oldStatus,
-            newStatus: 'ready_to_pickup',
-            description: "Request marked as ready for pickup by " . Auth::user()->name,
-        );
+            // Audit log
+            ActivityLog::record(
+                action: 'ready_for_pickup',
+                subject: $request_item,
+                oldStatus: $oldStatus,
+                newStatus: 'ready_to_pickup',
+                description: "Request marked as ready for pickup by " . Auth::user()->name,
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Database Update Error: " . $e->getMessage());
+            return back()->with('error', 'Database Error: ' . $e->getMessage());
+        }
 
         // Send Email Notification in the background using the explicitly defined Job
         if ($request_item->resident->email) {
             try {
                 \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to dispatch job: " . $e->getMessage());
                 return back()->with('error', 'Request marked as ready for pickup, but email system failed: ' . $e->getMessage());
             }
