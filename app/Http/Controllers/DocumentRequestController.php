@@ -129,9 +129,9 @@ class DocumentRequestController extends Controller {
 
     // Ready for pickup (admin only)
     public function readyForPickup(DocumentRequest $request_item) {
-        $oldStatus = $request_item->status;
-
         try {
+            $oldStatus = $request_item->status;
+
             $request_item->update([
                 'status'       => 'ready_to_pickup',
                 'processed_by' => Auth::id(),
@@ -145,22 +145,17 @@ class DocumentRequestController extends Controller {
                 newStatus: 'ready_to_pickup',
                 description: "Request marked as ready for pickup by " . Auth::user()->name,
             );
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Database Update Error: " . $e->getMessage());
-            return back()->with('error', 'Database Error: ' . $e->getMessage());
-        }
 
-        // Send Email Notification in the background using the explicitly defined Job
-        if ($request_item->resident->email) {
-            try {
+            // Send Email Notification in the background (fire-and-forget)
+            if ($request_item->resident && $request_item->resident->email) {
                 \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to dispatch job: " . $e->getMessage());
-                return back()->with('error', 'Request marked as ready for pickup, but email system failed: ' . $e->getMessage());
             }
-        }
 
-        return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
+            return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("ReadyForPickup FATAL: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     // Release → released (admin only)
