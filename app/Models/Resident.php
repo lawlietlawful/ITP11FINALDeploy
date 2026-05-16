@@ -26,9 +26,19 @@ class Resident extends Model {
         static::creating(function ($resident) {
             if (empty($resident->resident_id)) {
                 $year = date('Y');
-                $lastResident = static::where('resident_id', 'like', "RES-{$year}-%")
-                    ->orderByRaw('CAST(SUBSTRING(resident_id, 10) AS UNSIGNED) DESC')
-                    ->first();
+                $driver = \Illuminate\Support\Facades\DB::getDriverName();
+                
+                $query = static::where('resident_id', 'like', "RES-{$year}-%");
+                
+                if ($driver === 'mysql') {
+                    $query->orderByRaw('CAST(SUBSTRING(resident_id, 10) AS UNSIGNED) DESC');
+                } elseif ($driver === 'pgsql') {
+                    $query->orderByRaw('CAST(SUBSTRING(resident_id FROM 10) AS INTEGER) DESC');
+                } else {
+                    $query->latest('id');
+                }
+
+                $lastResident = $query->first();
 
                 $nextSeq = 1;
                 if ($lastResident && preg_match('/RES-\d{4}-(\d+)/', $lastResident->resident_id, $matches)) {
