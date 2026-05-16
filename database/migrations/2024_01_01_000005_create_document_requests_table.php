@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->foreignId('resident_id')->constrained('residents')->onDelete('cascade');
             $table->foreignId('document_type_id')->constrained('document_types')->onDelete('cascade');
             $table->text('purpose');
-            $table->enum('status', ['pending', 'processing', 'released', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'ready_to_pickup', 'released', 'rejected'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('released_at')->nullable();

@@ -10,7 +10,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE document_requests MODIFY COLUMN status ENUM('pending', 'processing', 'ready_to_pickup', 'released', 'rejected') DEFAULT 'pending'");
+        // Status enum updated in original migration to support PostgreSQL.
     }
 
     /**
@@ -18,6 +18,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE document_requests MODIFY COLUMN status ENUM('pending', 'processing', 'released', 'rejected') DEFAULT 'pending'");
+        // Status enum updated in original migration to support PostgreSQL.
     }
 };
