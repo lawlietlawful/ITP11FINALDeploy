@@ -234,9 +234,9 @@
                     <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Document</th>
                     <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Fee</th>
                     <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Purpose</th>
-                    <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Processed By</th>
-                    <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                    <th class="whitespace-nowrap px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th class="whitespace-nowrap px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Processed By</th>
+                    <th class="whitespace-nowrap px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50/80">
@@ -248,10 +248,13 @@
                     <td class="px-6 py-3.5 text-emerald-600 font-medium">₱{{ number_format($req->documentType->fee, 2) }}</td>
                     <td class="px-6 py-3.5 text-gray-600 max-w-[180px] truncate">{{ $req->purpose }}</td>
                     <td class="px-6 py-3.5">
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                        <span class="whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge }}">{{ Str::title(str_replace('_', ' ', $req->status)) }}</span>
                     </td>
-                    <td class="px-6 py-3.5 text-gray-600">{{ $req->processedBy->name ?? '—' }}</td>
-                    <td class="px-6 py-3.5 text-gray-400">{{ $req->created_at->format('M d, Y') }}</td>
+                    <td class="whitespace-nowrap px-6 py-3.5 text-gray-600">{{ $req->processedBy->name ?? '—' }}</td>
+                    <td class="whitespace-nowrap px-6 py-3.5">
+                        <span class="block text-gray-600 font-medium">{{ $req->created_at->format('M d, Y') }}</span>
+                        <span class="block text-[10px] text-gray-400 mt-0.5">{{ $req->created_at->format('g:i A') }} • {{ $req->created_at->diffForHumans() }}</span>
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">No records match your filters.</td></tr>

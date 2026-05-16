@@ -6,7 +6,7 @@
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <div class="flex items-center gap-3">
                     <h3 class="text-lg leading-6 font-bold text-gray-900">Request #{{ $documentRequest->id }}</h3>
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $documentRequest->status_badge }}">{{ ucfirst($documentRequest->status) }}</span>
+                    <span class="whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $documentRequest->status_badge }}">{{ Str::title(str_replace('_', ' ', $documentRequest->status)) }}</span>
                 </div>
                 <button @click="{{ $closeAction }}" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

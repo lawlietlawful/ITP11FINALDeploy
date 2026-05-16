@@ -60,7 +60,7 @@
     <div class="w-full max-w-md relative z-10">
         {{-- Logo Area --}}
         <div class="text-center mb-8">
-            <img src="{{ asset('New Logo.png') }}" alt="VistáBarangay Logo" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-xl ring-4 ring-white/15">
+            <img src="{{ \App\Models\Setting::where('key', 'system_logo')->value('value') ?: asset('New Logo.png') }}" alt="VistáBarangay Logo" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-xl ring-4 ring-white/15">
             <h1 class="text-3xl font-extrabold text-white tracking-tight">Vistá<span class="text-brand-300">Barangay</span></h1>
             <p class="text-brand-200/70 text-sm mt-1 font-medium">Document Request System</p>
         </div>

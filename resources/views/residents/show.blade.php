@@ -118,7 +118,7 @@
                 <div class="flex-1 min-w-0 bg-gray-50/50 rounded-xl px-4 py-3 border border-gray-100/80">
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                         <p class="text-sm font-semibold text-gray-900">{{ $req->documentType->name }}</p>
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ Str::title(str_replace('_', ' ', $req->status)) }}</span>
                     </div>
                     @if($req->purpose)
                         <p class="text-xs text-gray-500 mt-1">{{ $req->purpose }}</p>

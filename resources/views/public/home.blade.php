@@ -1,112 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VistáBarangay | Secure Online Document Requests</title>
-    <meta name="description" content="Official Barangay e-Portal for fast, secure online document requests. Submit requests from home, view processing times, and track status seamlessly.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            200: '#bae0fd',
-                            300: '#7cd0fd',
-                            400: '#36bffa',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                            950: '#082f49',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-subtle': 'pulseSubtle 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        pulseSubtle: {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: 0.8 },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .hero-gradient {
-            background: radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 10% 90%, rgba(2, 132, 199, 0.1) 0%, transparent 40%),
-                        linear-gradient(135deg, #082f49 0%, #0c4a6e 100%);
-        }
-        .premium-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .premium-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 40px rgba(12, 74, 110, 0.08);
-            border-color: rgba(14, 165, 233, 0.3);
-        }
-    </style>
-</head>
-<body class="bg-[#f8fafc] text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+@extends('layouts.public')
 
-    {{-- Premium Header Navbar --}}
-    <header class="sticky top-0 z-50 glass-nav transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="{{ route('public.home') }}" class="flex items-center gap-3.5 group">
-                <img src="{{ asset('New Logo.png') }}" alt="VistáBarangay Logo" class="w-11 h-11 flex-shrink-0 rounded-full object-cover shadow-md ring-2 ring-brand-100 group-hover:scale-105 transition-transform duration-300">
-                <div>
-                    <span class="font-extrabold text-lg text-slate-900 tracking-tight block leading-none">Vistá<span class="text-brand-600">Barangay</span></span>
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mt-1">Official Document System</span>
-                </div>
-            </a>
-            
-            <nav class="hidden md:flex items-center gap-8 font-medium text-sm text-slate-600">
-                <a href="#documents" class="hover:text-brand-600 transition-colors">Available Documents</a>
-                <a href="#how-it-works" class="hover:text-brand-600 transition-colors">How It Works</a>
-                <a href="#faq" class="hover:text-brand-600 transition-colors">Help & FAQ</a>
-            </nav>
-
-            <div class="flex items-center gap-3">
-                <a href="{{ route('public.track') }}" class="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all duration-200">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    Track Status
-                </a>
-                <a href="{{ route('public.request') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:-translate-y-0.5 transition-all duration-300">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    Request Document
-                </a>
-            </div>
-        </div>
-    </header>
+@section('content')
+    @php
+        $allowOnlineRequests = \App\Models\Setting::where('key', 'allow_online_requests')->first()?->value === 'true';
+    @endphp
 
     {{-- Stunning Hero Section --}}
     <section class="hero-gradient text-white relative overflow-hidden pt-12 pb-24 md:py-32">
@@ -135,10 +32,17 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                        <a href="{{ route('public.request') }}" class="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-slate-900 bg-white hover:bg-slate-100 shadow-xl shadow-black/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2.5 text-base">
-                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                            Start New Request
-                        </a>
+                        @if($allowOnlineRequests)
+                            <a href="{{ route('public.request') }}" class="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-slate-900 bg-white hover:bg-slate-100 shadow-xl shadow-black/10 hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2.5 text-base">
+                                <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                Start New Request
+                            </a>
+                        @else
+                            <button disabled class="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-slate-500 bg-slate-200 cursor-not-allowed opacity-90 flex items-center justify-center gap-2.5 text-base">
+                                <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                Online Requests Disabled
+                            </button>
+                        @endif
                         <a href="{{ route('public.track') }}" class="w-full sm:w-auto px-8 py-4 rounded-xl font-semibold text-white bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/15 transition-all duration-300 flex items-center justify-center gap-2.5 text-base">
                             <svg class="w-5 h-5 text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             Track Request
@@ -289,13 +193,13 @@
                 <div class="absolute top-1/2 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-brand-100 via-brand-200 to-emerald-100 hidden md:block -translate-y-6 z-0"></div>
 
                 @foreach([
-                    ['step' => '01', 'title' => 'Submit Online Form', 'desc' => 'Complete the streamlined request application securely and attach mandatory supporting reasoning.', 'icon' => '📝', 'color' => 'text-brand-600', 'bg' => 'bg-brand-50', 'border' => 'border-brand-200'],
-                    ['step' => '02', 'title' => 'Real-Time Verification', 'desc' => 'Receive your highly secure tracking code immediately. Staff reviews and authenticates records dynamically.', 'icon' => '🛡️', 'color' => 'text-amber-600', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200'],
-                    ['step' => '03', 'title' => 'Claim Your Document', 'desc' => 'Once status reflects "Released", visit the main administration hall with any identity card to pick up.', 'icon' => '✅', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200'],
+                    ['step' => '01', 'title' => 'Submit Online Form', 'desc' => 'Complete the streamlined request application securely and attach mandatory supporting reasoning.', 'icon' => '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>', 'color' => 'text-brand-600', 'bg' => 'bg-brand-50', 'border' => 'border-brand-200'],
+                    ['step' => '02', 'title' => 'Real-Time Verification', 'desc' => 'Receive your highly secure tracking code immediately. Staff reviews and authenticates records dynamically.', 'icon' => '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', 'color' => 'text-amber-600', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200'],
+                    ['step' => '03', 'title' => 'Claim Your Document', 'desc' => 'Once status reflects "Released", visit the main administration hall with any identity card to pick up.', 'icon' => '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200'],
                 ] as $item)
                 <div class="relative z-10 bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow text-center flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-2xl {{ $item['bg'] }} {{ $item['border'] }} border flex items-center justify-center text-2xl mb-5 shadow-inner">
-                        {{ $item['icon'] }}
+                    <div class="w-16 h-16 rounded-2xl {{ $item['bg'] }} {{ $item['border'] }} border flex items-center justify-center mb-5 shadow-inner {{ $item['color'] }}">
+                        {!! $item['icon'] !!}
                     </div>
                     
                     <span class="text-xs font-black {{ $item['color'] }} uppercase tracking-widest block mb-1.5">{{ $item['step'] }}</span>
@@ -347,46 +251,4 @@
         </div>
     </section>
 
-    {{-- Premium Footer --}}
-    <footer class="bg-slate-900 text-slate-400 pt-16 pb-12 border-t border-slate-800/80">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-slate-800">
-            <div class="md:col-span-5 space-y-4">
-                <div class="flex items-center gap-3">
-                    <img src="{{ asset('New Logo.png') }}" alt="VistáBarangay Logo" class="w-9 h-9 flex-shrink-0 rounded-full object-cover shadow-sm ring-1 ring-slate-700">
-                    <span class="font-extrabold text-base text-white tracking-tight">Vistá<span class="text-brand-400">Barangay</span></span>
-                </div>
-                <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
-                    Designed to modernize localized constituent engagement. Providing real-time audit visibility, encrypted tracking, and highly accessible document issuance interfaces.
-                </p>
-            </div>
-
-            <div class="md:col-span-4 space-y-3">
-                <span class="text-xs font-bold text-white uppercase tracking-wider block">Constituent Services</span>
-                <ul class="space-y-2 text-xs">
-                    <li><a href="{{ route('public.request') }}" class="hover:text-white transition-colors">Request a New Document</a></li>
-                    <li><a href="{{ route('public.track') }}" class="hover:text-white transition-colors">Look Up Application Status</a></li>
-                    <li><a href="#documents" class="hover:text-white transition-colors">Catalog & Processing Timelines</a></li>
-                </ul>
-            </div>
-
-            <div class="md:col-span-3 space-y-3">
-                <span class="text-xs font-bold text-white uppercase tracking-wider block">Security & Auditing</span>
-                <p class="text-[11px] text-slate-500 leading-normal">
-                    Authorized actions enforce role validation layers and secure event tracking to audit all platform behaviors.
-                </p>
-
-            </div>
-        </div>
-
-        <div class="max-w-7xl mx-auto px-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-            <p>&copy; {{ date('Y') }} Barangay Document Request System. All rights reserved.</p>
-            <div class="flex gap-4">
-                <span>Highly Secure Infrastructure</span>
-                <span>•</span>
-                <span>VistáBarangay Platform</span>
-            </div>
-        </div>
-    </footer>
-
-</body>
-</html>
+@endsection

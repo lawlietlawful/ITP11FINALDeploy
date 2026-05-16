@@ -13,19 +13,23 @@ use App\Http\Controllers\ResidentController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicController::class, 'home'])->name('public.home');
-Route::get('/portal/request', [PublicController::class, 'requestForm'])->name('public.request');
+Route::middleware(['system.settings'])->group(function () {
+    Route::get('/', [PublicController::class, 'home'])->name('public.home');
+    Route::get('/portal/request', [PublicController::class, 'requestForm'])->name('public.request');
 
-Route::post('/portal/request', [PublicController::class, 'submitRequest'])
-    ->middleware('throttle:public-request')
-    ->name('public.submit');
+    Route::post('/portal/request', [PublicController::class, 'submitRequest'])
+        ->middleware('throttle:public-request')
+        ->name('public.submit');
 
-Route::get('/portal/success/{tracking_code}', [PublicController::class, 'success'])->name('public.success');
-Route::get('/portal/track', [PublicController::class, 'trackForm'])->name('public.track');
+    Route::get('/portal/success/{tracking_code}', [PublicController::class, 'success'])->name('public.success');
+    Route::get('/portal/track', [PublicController::class, 'trackForm'])->name('public.track');
 
-Route::post('/portal/track', [PublicController::class, 'track'])
-    ->middleware('throttle:public-track')
-    ->name('public.track.search');
+    Route::post('/portal/track', [PublicController::class, 'track'])
+        ->middleware('throttle:public-track')
+        ->name('public.track.search');
+        
+    Route::view('/maintenance', 'public.maintenance')->name('public.maintenance');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -63,6 +67,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('requests/{request_item}/print', [DocumentRequestController::class, 'print'])->name('requests.print');
     Route::post('requests/{request_item}/approve', [DocumentRequestController::class, 'approve'])->name('requests.approve');
     Route::post('requests/{request_item}/release', [DocumentRequestController::class, 'release'])->name('requests.release');
+    Route::post('requests/{request_item}/ready-for-pickup', [DocumentRequestController::class, 'readyForPickup'])->name('requests.readyForPickup');
     Route::post('requests/{request_item}/reject', [DocumentRequestController::class, 'reject'])->name('requests.reject');
     Route::delete('requests/{request_item}', [DocumentRequestController::class, 'destroy'])->name('requests.destroy');
 

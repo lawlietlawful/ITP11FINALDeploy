@@ -34,7 +34,7 @@ class ReportController extends Controller {
         $requests = (clone $baseQuery)
             ->with(['resident', 'documentType', 'processedBy'])
             ->latest('document_requests.created_at')
-            ->paginate(15)
+            ->paginate(5)
             ->withQueryString();
 
         $documentTypes = DocumentType::orderBy('name')->get();

@@ -42,17 +42,21 @@
                 </select>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div>
                     <label for="contact_number" class="block text-sm font-medium text-gray-600 mb-1.5">Contact Number</label>
                     <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', $resident->contact_number) }}"
                            class="form-input w-full" placeholder="09171234567">
-                    <p class="text-xs text-gray-400 mt-1">Philippine mobile format (11 digits starting with 09)</p>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-600 mb-1.5">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ old('email', $resident->email) }}"
+                           class="form-input w-full" placeholder="juan@example.com">
                 </div>
                 <div>
                     <label for="birthdate" class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
                     <input type="date" id="birthdate" name="birthdate" value="{{ old('birthdate', $resident->birthdate?->format('Y-m-d')) }}"
-                           class="form-input w-full" max="{{ date('Y-m-d') }}">
+                           class="form-input w-full" max="{{ now()->subYears(18)->format('Y-m-d') }}">
                 </div>
             </div>
 

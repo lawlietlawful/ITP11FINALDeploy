@@ -42,7 +42,8 @@ class PublicController extends Controller {
             'last_name' => 'required|string|max:100',
             'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
             'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate' => 'nullable|date|before:today',
+            'email' => 'nullable|email|max:255',
+            'birthdate' => 'required|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:Male,Female',
             'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
             'document_type_id' => [
@@ -88,7 +89,7 @@ class PublicController extends Controller {
                 ]);
         }
 
-        $resident = $this->findOrCreateMatchingResident($validated);
+        $resident = $this->findMatchingResidentOrFail($validated);
 
         $duplicateExists = DocumentRequest::where('resident_id', $resident->id)
             ->where('document_type_id', $validated['document_type_id'])
@@ -248,44 +249,28 @@ class PublicController extends Controller {
         ]);
     }
 
-    private function findOrCreateMatchingResident(array $validated): Resident
+    private function findMatchingResidentOrFail(array $validated): Resident
     {
-        $query = Resident::query()
+        $resident = Resident::query()
             ->where('first_name', $validated['first_name'])
             ->where('last_name', $validated['last_name'])
-            ->where('address', $validated['address']);
+            ->whereDate('birthdate', $validated['birthdate'])
+            ->first();
 
-        $this->applyNullableMatch($query, 'middle_name', $validated['middle_name'] ?? null);
-        $this->applyNullableMatch($query, 'contact_number', $validated['contact_number'] ?? null);
-        $this->applyNullableMatch($query, 'gender', $validated['gender'] ?? null);
-        $this->applyNullableMatch($query, 'civil_status', $validated['civil_status'] ?? null);
-
-        if (! empty($validated['birthdate'])) {
-            $query->whereDate('birthdate', $validated['birthdate']);
-        } else {
-            $query->whereNull('birthdate');
+        if (! $resident) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'first_name' => 'We could not find a registered resident matching this Name and Birthdate. Please ensure you are officially registered at the Barangay Hall.'
+            ]);
         }
 
-        return $query->first() ?? Resident::create([
-            'first_name' => $validated['first_name'],
-            'middle_name' => $validated['middle_name'] ?? null,
-            'last_name' => $validated['last_name'],
+        // Keep the database up to date with their latest submission details
+        $resident->update([
             'address' => $validated['address'],
-            'birthdate' => $validated['birthdate'] ?? null,
-            'gender' => $validated['gender'] ?? null,
-            'civil_status' => $validated['civil_status'] ?? null,
-            'contact_number' => $validated['contact_number'] ?? null,
+            'contact_number' => $validated['contact_number'] ?? $resident->contact_number,
+            'email' => $validated['email'] ?? $resident->email,
         ]);
-    }
 
-    private function applyNullableMatch($query, string $column, mixed $value): void
-    {
-        if ($value === null || $value === '') {
-            $query->whereNull($column);
-            return;
-        }
-
-        $query->where($column, $value);
+        return $resident;
     }
 
     private function logPublicSecurityEvent(

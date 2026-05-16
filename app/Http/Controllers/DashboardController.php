@@ -93,7 +93,7 @@ class DashboardController extends Controller {
                 'request_url' => isset($data['request_id'])
                     ? route('requests.index', ['open_request' => $data['request_id']])
                     : ($data['request_url'] ?? route('requests.index')),
-                'created_at' => $data['created_at_human'] ?? $notification->created_at->diffForHumans(),
+                'created_at' => $notification->created_at->diffForHumans(),
                 'created_at_iso' => $data['created_at_iso'] ?? $notification->created_at->toIso8601String(),
                 'read_at' => $notification->read_at?->toIso8601String(),
             ];

@@ -9,7 +9,7 @@
         </a>
         <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Request #{{ $request_item->id }}</h1>
-            <span class="px-3 py-1 rounded-full text-[11px] font-semibold {{ $request_item->status_badge }}">{{ ucfirst($request_item->status) }}</span>
+            <span class="whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-semibold {{ $request_item->status_badge }}">{{ Str::title(str_replace('_', ' ', $request_item->status)) }}</span>
         </div>
     </div>
 
@@ -36,7 +36,7 @@
             <div>
                 <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Status</span>
                 <p class="mt-1">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $request_item->status_badge }}">{{ ucfirst($request_item->status) }}</span>
+                    <span class="whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $request_item->status_badge }}">{{ Str::title(str_replace('_', ' ', $request_item->status)) }}</span>
                 </p>
             </div>
             <div class="sm:col-span-2">

@@ -196,17 +196,17 @@
                 <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Resident</th>
                 <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Document</th>
                 <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Purpose</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                <th class="whitespace-nowrap px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="whitespace-nowrap px-6 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
                 <th class="px-6 py-3 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-50/80">
             @forelse($requests as $req)
-            <tr class="table-row" x-data="{ viewModal: false, deleteModal: false, residentModal: false }">
+            <tr class="table-row" x-data="{ viewModal: false, deleteModal: false }">
                 <td class="px-6 py-3.5 text-gray-400 font-mono text-xs">{{ $req->id }}</td>
                 <td class="px-6 py-3.5">
-                    <button @click="residentModal = true" class="font-medium text-gray-900 hover:text-primary-600 transition-colors text-left block">
+                    <button @click="viewModal = true" class="font-medium text-gray-900 hover:text-primary-600 transition-colors text-left block">
                         {{ $req->resident->full_name }}
                     </button>
                     <span class="block text-[10px] font-mono text-gray-400 mt-0.5">{{ $req->resident->resident_id }}</span>
@@ -214,9 +214,12 @@
                 <td class="px-6 py-3.5 text-gray-600">{{ $req->documentType->name }}</td>
                 <td class="px-6 py-3.5 text-gray-600 max-w-[200px] truncate">{{ $req->purpose }}</td>
                 <td class="px-6 py-3.5">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                    <span class="whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $req->status_badge }}">{{ Str::title(str_replace('_', ' ', $req->status)) }}</span>
                 </td>
-                <td class="px-6 py-3.5 text-gray-400">{{ $req->created_at->format('M d, Y') }}</td>
+                <td class="whitespace-nowrap px-6 py-3.5">
+                    <span class="block text-gray-600 font-medium">{{ $req->created_at->format('M d, Y') }}</span>
+                    <span class="block text-[10px] text-gray-400 mt-0.5">{{ $req->created_at->format('g:i A') }} • {{ $req->created_at->diffForHumans() }}</span>
+                </td>
                 <td class="px-6 py-3.5 text-right">
                     <div class="flex items-center justify-end gap-1.5">
                         <button type="button" @click="viewModal = true" class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50/80 rounded-lg transition-colors" title="View">
@@ -237,7 +240,7 @@
                                     <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                         <div class="flex items-center gap-3">
                                             <h3 class="text-lg leading-6 font-bold text-gray-900">Request #{{ $req->id }}</h3>
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                                            <span class="whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ Str::title(str_replace('_', ' ', $req->status)) }}</span>
                                         </div>
                                         <button @click="viewModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -309,6 +312,15 @@
                                                 </form>
                                                 @endif
                                                 @if($req->status === 'processing')
+                                                <form action="{{ route('requests.readyForPickup', $req) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn-primary bg-indigo-600 hover:bg-indigo-700 border-indigo-600">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                        Ready for Pickup (Send Email)
+                                                    </button>
+                                                </form>
+                                                @endif
+                                                @if($req->status === 'ready_to_pickup')
                                                 <form action="{{ route('requests.release', $req) }}" method="POST">
                                                     @csrf
                                                     <button class="btn-success">
@@ -367,88 +379,6 @@
                                                 Delete Request
                                             </button>
                                         </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template x-teleport="body">
-                        {{-- Resident Profile Modal --}}
-                        <div x-show="residentModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;">
-                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                <div x-show="residentModal" x-transition.opacity class="fixed inset-0 transition-opacity bg-gray-900/50" @click="residentModal = false"></div>
-                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                                <div x-show="residentModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full border border-gray-100">
-                                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                        <div>
-                                            <h3 class="text-lg leading-6 font-bold text-gray-900">{{ $req->resident->full_name }}</h3>
-                                            <span class="text-[11px] font-mono text-gray-400">{{ $req->resident->resident_id }}</span>
-                                        </div>
-                                        <button @click="residentModal = false" class="text-gray-400 hover:text-gray-500 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="px-6 py-6">
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm mb-6">
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">First Name</span>
-                                                <p class="mt-1 text-gray-700 font-medium">{{ $req->resident->first_name }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Middle Name</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->middle_name ?? '—' }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Last Name</span>
-                                                <p class="mt-1 text-gray-700 font-medium">{{ $req->resident->last_name }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Address</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->address }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Contact Number</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->contact_number ?? '—' }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Gender</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->gender ?? '—' }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Civil Status</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->civil_status ?? '—' }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Birthdate</span>
-                                                <p class="mt-1 text-gray-700">{{ $req->resident->birthdate ? $req->resident->birthdate->format('M d, Y') : '—' }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Age</span>
-                                                <p class="mt-1 text-gray-700 font-bold">{{ $req->resident->age !== null ? $req->resident->age . ' years old' : '—' }}</p>
-                                            </div>
-                                        </div>
-
-                                        {{-- Household Members --}}
-                                        @php $householdMembers = $req->resident->householdMembers(); @endphp
-                                        @if($householdMembers->count() > 0)
-                                            <div class="border-t border-gray-100/60 pt-4">
-                                                <h4 class="text-[13px] font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                                    Household Members
-                                                    <span class="text-[10px] text-gray-400 font-normal">({{ $householdMembers->count() }} sharing household)</span>
-                                                </h4>
-                                                <div class="flex flex-wrap gap-2">
-                                                    @foreach($householdMembers as $member)
-                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-gray-50 text-gray-700 border border-gray-100/80">
-                                                            <span class="w-1.5 h-1.5 rounded-full {{ $member->status_color['dot'] }}"></span>
-                                                            {{ $member->full_name }}
-                                                            <span class="text-[10px] text-gray-400">({{ $member->status }})</span>
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
                             </div>

@@ -78,12 +78,13 @@ class ResidentController extends Controller {
             'last_name' => 'required|string|max:100',
             'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
             'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate' => 'nullable|date|before_or_equal:today',
+            'email' => 'nullable|email|max:255',
+            'birthdate' => 'nullable|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:Male,Female',
             'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
         ], [
             'contact_number.regex' => 'Contact number must be a valid PH mobile number (e.g., 09171234567).',
-            'birthdate.before_or_equal' => 'Birthdate cannot be in the future.',
+            'birthdate.before_or_equal' => 'Resident must be at least 18 years old.',
         ]);
 
         $duplicate = Resident::where('first_name', $validated['first_name'])
@@ -125,12 +126,13 @@ class ResidentController extends Controller {
             'last_name' => 'required|string|max:100',
             'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
             'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-            'birthdate' => 'nullable|date|before_or_equal:today',
+            'email' => 'nullable|email|max:255',
+            'birthdate' => 'nullable|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
             'gender' => 'nullable|in:Male,Female',
             'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
         ], [
             'contact_number.regex' => 'Contact number must be a valid PH mobile number (e.g., 09171234567).',
-            'birthdate.before_or_equal' => 'Birthdate cannot be in the future.',
+            'birthdate.before_or_equal' => 'Resident must be at least 18 years old.',
         ]);
 
         $oldName = $resident->full_name;
@@ -267,7 +269,7 @@ class ResidentController extends Controller {
                 'last_name' => 'required|string|max:100',
                 'address' => 'required|string|in:Purok 1,Purok 2,Purok 3,Purok 4,Purok 5,Purok 6',
                 'contact_number' => ['nullable', 'string', 'regex:/^09\d{9}$/'],
-                'birthdate' => 'nullable|date|before_or_equal:today',
+                'birthdate' => 'nullable|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
                 'gender' => 'nullable|in:Male,Female',
                 'civil_status' => 'nullable|in:Single,Married,Widowed,Separated',
             ]);

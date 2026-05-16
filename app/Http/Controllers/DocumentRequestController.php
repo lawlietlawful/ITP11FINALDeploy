@@ -126,6 +126,35 @@ class DocumentRequestController extends Controller {
         return back()->with('success', 'Request approved and marked as processing.');
     }
 
+    // Ready for pickup (admin only)
+    public function readyForPickup(DocumentRequest $request_item) {
+        $oldStatus = $request_item->status;
+
+        $request_item->update([
+            'status'       => 'ready_to_pickup',
+            'processed_by' => Auth::id(),
+        ]);
+
+        // Audit log
+        ActivityLog::record(
+            action: 'ready_for_pickup',
+            subject: $request_item,
+            oldStatus: $oldStatus,
+            newStatus: 'ready_to_pickup',
+            description: "Request marked as ready for pickup by " . Auth::user()->name,
+        );
+
+        // Send Email Notification in the background after the response is sent
+        if ($request_item->resident->email) {
+            dispatch(function () use ($request_item) {
+                \Illuminate\Support\Facades\Mail::to($request_item->resident->email)
+                    ->send(new \App\Mail\DocumentReadyMail($request_item));
+            })->afterResponse();
+        }
+
+        return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
+    }
+
     // Release → released (admin only)
     public function release(DocumentRequest $request_item) {
         $oldStatus = $request_item->status;

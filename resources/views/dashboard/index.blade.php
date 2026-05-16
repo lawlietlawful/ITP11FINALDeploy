@@ -11,6 +11,26 @@
     {{-- Top Right Actions (Dashboard Only) --}}
     <div class="flex items-center justify-end gap-3 self-end sm:self-auto relative z-50">
         
+        {{-- Live Time & Date --}}
+        <div class="hidden sm:flex items-center gap-2.5 bg-white/90 border border-gray-200/80 px-4 h-11 rounded-full shadow-sm backdrop-blur-sm transition-all hover:shadow-md"
+             x-data="{
+                 time: '',
+                 date: '',
+                 update() {
+                     const now = new Date();
+                     this.time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                     this.date = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                 }
+             }"
+             x-init="update(); setInterval(() => update(), 1000)">
+            <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="text-[13px] font-bold text-gray-700 tracking-wide flex items-center gap-1.5">
+                <span x-text="date" class="text-gray-500 font-medium"></span>
+                <span class="text-gray-300">|</span>
+                <span x-text="time" class="text-primary-700"></span>
+            </div>
+        </div>
+
         {{-- Notification Dropdown --}}
         <div x-data="{
                 open: false,

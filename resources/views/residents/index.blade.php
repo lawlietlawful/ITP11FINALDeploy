@@ -94,18 +94,22 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Contact
                                                     Number</label>
                                                 <input type="text" name="contact_number" value="{{ old('contact_number') }}"
                                                     class="form-input w-full" placeholder="09171234567">
-                                                <p class="text-[11px] text-gray-400 mt-1">11 digits starting with 09</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Email Address</label>
+                                                <input type="email" name="email" value="{{ old('email') }}"
+                                                    class="form-input w-full" placeholder="juan@example.com">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
                                                 <input type="date" name="birthdate" value="{{ old('birthdate') }}"
-                                                    class="form-input w-full" max="{{ date('Y-m-d') }}">
+                                                    class="form-input w-full" max="{{ now()->subYears(18)->format('Y-m-d') }}">
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -692,8 +696,7 @@
                                                                         <div class="flex items-center justify-between gap-3 flex-wrap">
                                                                             <p class="text-sm font-semibold text-gray-900">
                                                                                 {{ $req->documentType->name }}</p>
-                                                                            <span
-                                                                                class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ ucfirst($req->status) }}</span>
+                                                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $req->status_badge }}">{{ Str::title(str_replace('_', ' ', $req->status)) }}</span>
                                                                         </div>
                                                                         <div class="flex items-center gap-2 mt-1.5">
                                                                             <span
@@ -790,7 +793,7 @@
                                                             <textarea name="address" rows="3" required
                                                                 class="form-input w-full resize-none">{{ $resident->address }}</textarea>
                                                         </div>
-                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                                             <div>
                                                                 <label
                                                                     class="block text-sm font-medium text-gray-600 mb-1.5">Contact
@@ -800,11 +803,17 @@
                                                                     class="form-input w-full" placeholder="09171234567">
                                                             </div>
                                                             <div>
+                                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Email Address</label>
+                                                                <input type="email" name="email"
+                                                                    value="{{ $resident->email }}"
+                                                                    class="form-input w-full" placeholder="juan@example.com">
+                                                            </div>
+                                                            <div>
                                                                 <label
                                                                     class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
                                                                 <input type="date" name="birthdate"
                                                                     value="{{ $resident->birthdate?->format('Y-m-d') }}"
-                                                                    class="form-input w-full">
+                                                                    class="form-input w-full" max="{{ now()->subYears(18)->format('Y-m-d') }}">
                                                             </div>
                                                         </div>
                                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

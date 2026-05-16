@@ -16,7 +16,8 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->except(['_token', '_method']);
+        $data = $request->except(['_token', '_method', 'expected_keys', 'section']);
+        $expectedKeys = $request->input('expected_keys', []);
         
         foreach ($data as $key => $value) {
             $setting = Setting::where('key', $key)->first();
@@ -32,15 +33,31 @@ class SettingsController extends Controller
             }
         }
 
-        // Handle unchecked booleans (they aren't sent in the request)
-        $booleanSettings = Setting::where('type', 'boolean')->get();
-        foreach ($booleanSettings as $setting) {
-            if (!isset($data[$setting->key])) {
-                $setting->value = 'false';
+        // Handle file uploads separately since they are in $request->file()
+        if ($request->hasFile('system_logo')) {
+            $setting = Setting::where('key', 'system_logo')->first();
+            if ($setting) {
+                $path = $request->file('system_logo')->store('logos', 'public');
+                $setting->value = '/storage/' . $path;
                 $setting->save();
             }
         }
 
-        return back()->with('success', 'System settings updated successfully.');
+        // Handle unchecked booleans that were expected in this specific form submission
+        if (!empty($expectedKeys)) {
+            foreach ($expectedKeys as $key) {
+                $setting = Setting::where('key', $key)->first();
+                if ($setting && $setting->type === 'boolean' && !isset($data[$key])) {
+                    $setting->value = 'false';
+                    $setting->save();
+                }
+            }
+        } else {
+            // Fallback for older forms that don't send expected_keys, but scoped to the keys that WERE sent?
+            // Actually, if we don't send expected_keys, we shouldn't touch ANY other boolean.
+        }
+
+        $section = $request->input('section', 'System');
+        return back()->with('success', "{$section} settings updated successfully.");
     }
 }

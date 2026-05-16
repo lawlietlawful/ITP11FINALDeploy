@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Resident extends Model {
     protected $fillable = [
         'first_name', 'middle_name', 'last_name',
-        'address', 'contact_number', 'birthdate',
+        'address', 'contact_number', 'email', 'birthdate',
         'gender', 'civil_status',
     ];
 

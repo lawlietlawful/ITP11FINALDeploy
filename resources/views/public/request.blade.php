@@ -1,82 +1,10 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Document Request | VistáBarangay</title>
-    <meta name="description" content="Secure online application form for requesting official barangay documents, certificates, and clearances.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            200: '#bae0fd',
-                            300: '#7cd0fd',
-                            400: '#36bffa',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                            950: '#082f49',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .input-premium {
-            background: rgba(248, 250, 252, 0.8);
-            border: 1px solid #e2e8f0;
-            border-radius: 0.875rem;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .input-premium:focus {
-            background: #ffffff;
-            border-color: #0ea5e9;
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
-            outline: none;
-        }
-    </style>
-</head>
-<body class="bg-[#f8fafc] text-slate-800 antialiased selection:bg-brand-500 selection:text-white min-h-screen flex flex-col">
+@extends('layouts.public')
 
-    {{-- Premium Header Navbar --}}
-    <header class="sticky top-0 z-50 glass-nav">
-        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="{{ route('public.home') }}" class="flex items-center gap-3 group">
-                <img src="{{ asset('New Logo.png') }}" alt="VistáBarangay Logo" class="w-9 h-9 flex-shrink-0 rounded-full object-cover shadow-sm ring-2 ring-brand-100 group-hover:scale-105 transition-transform duration-200">
-                <span class="font-bold text-base text-slate-900 tracking-tight">Vistá<span class="text-brand-600">Barangay</span></span>
-            </a>
-            
-            <a href="{{ route('public.track') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3.5 py-2 rounded-lg transition-colors border border-brand-100/50">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                Track Request
-            </a>
-        </div>
-    </header>
+@section('title', 'Submit Document Request | VistáBarangay')
 
+@section('content')
     {{-- Main Content Container --}}
-    <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-10">
-        
+    <div class="flex-1 max-w-4xl w-full mx-auto px-6 py-10">
         {{-- Elegant Multi-Step Indicator --}}
         <div class="max-w-xl mx-auto flex items-center justify-center mb-10">
             <div class="flex items-center gap-2.5">
@@ -117,7 +45,7 @@
                 </x-alert>
             @endif
 
-            <form method="POST" action="{{ route('public.submit') }}" class="p-8 space-y-8">
+            <form method="POST" action="{{ route('public.submit') }}" class="p-8 space-y-8" x-data="{ isSubmitting: false }" @submit="isSubmitting = true">
                 @csrf
 
                 {{-- Honeypot Anti-Bot Trap (hidden from humans, filled by bots) --}}
@@ -166,19 +94,26 @@
                         <span class="block text-[11px] text-slate-400 font-medium mt-1">Select your official designated Purok jurisdiction.</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                         <div>
                             <label for="contact_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Contact Number</label>
                             <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number') }}"
-                                   class="input-premium w-full px-4 py-3 text-sm font-medium text-slate-800 placeholder:text-slate-400"
+                                   class="input-premium w-full px-4 py-3 text-sm font-medium text-slate-800"
                                    placeholder="09171234567">
-                            <span class="block text-[11px] text-slate-400 font-medium mt-1">PH mobile format (11 digits starting with 09)</span>
+                            <span class="block text-[11px] text-slate-400 font-medium mt-1">11 digits starting with 09</span>
                         </div>
                         <div>
-                            <label for="birthdate" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Birthdate</label>
-                            <input type="date" id="birthdate" name="birthdate" value="{{ old('birthdate') }}"
+                            <label for="email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" value="{{ old('email') }}"
                                    class="input-premium w-full px-4 py-3 text-sm font-medium text-slate-800"
-                                   max="{{ date('Y-m-d') }}">
+                                   placeholder="juan@example.com">
+                            <span class="block text-[11px] text-slate-400 font-medium mt-1">For Ready-to-Pickup notifications</span>
+                        </div>
+                        <div>
+                            <label for="birthdate" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Birthdate <span class="text-rose-500">*</span></label>
+                            <input type="date" id="birthdate" name="birthdate" value="{{ old('birthdate') }}" required
+                                   class="input-premium w-full px-4 py-3 text-sm font-medium text-slate-800"
+                                   max="{{ now()->subYears(18)->format('Y-m-d') }}">
                         </div>
                     </div>
 
@@ -236,35 +171,20 @@
                     </div>
                 </div>
 
-                {{-- Agreement Notice --}}
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-500 leading-relaxed font-normal">
-                    <span class="font-bold text-slate-700">Security Notification:</span> Submitting requests logs network access footprints including timestamp coordinates and address originators to prevent platform enumeration abuse. Ensure credentials comply with local standard policies.
-                </div>
 
                 {{-- Action Panel --}}
                 <div class="pt-4 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
                     <a href="{{ route('public.home') }}" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors text-center uppercase tracking-wider">
                         Cancel Application
                     </a>
-                    <button type="submit" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30 transition-all uppercase tracking-wider inline-flex items-center justify-center gap-2">
-                        <span>Authenticate & Submit</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    <button type="submit" x-bind:disabled="isSubmitting" :class="{ 'opacity-70 cursor-not-allowed': isSubmitting }" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30 transition-all uppercase tracking-wider inline-flex items-center justify-center gap-2">
+                        <span x-text="isSubmitting ? 'Submitting...' : 'Authenticate & Submit'">Authenticate & Submit</span>
+                        <svg x-show="!isSubmitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        <svg x-show="isSubmitting" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </div>
             </form>
         </div>
 
-    </main>
-
-    {{-- Premium Footer Compact --}}
-    <footer class="bg-slate-900 text-slate-500 py-6 border-t border-slate-800 mt-12 text-xs text-center">
-        <div class="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p>&copy; {{ date('Y') }} VistáBarangay. Secure Submissions.</p>
-            <div class="flex gap-4 text-slate-600 font-medium">
-                <a href="{{ route('login') }}" class="hover:text-slate-400 transition-colors">Admin Hub</a>
-            </div>
-        </div>
-    </footer>
-
-</body>
-</html>
+    </div>
+@endsection
