@@ -146,9 +146,19 @@ class DocumentRequestController extends Controller {
                 description: "Request marked as ready for pickup by " . Auth::user()->name,
             );
 
-            // Send Email Notification in the background (fire-and-forget)
+            // Send Email Notification after the response is delivered to the browser
             if ($request_item->resident && $request_item->resident->email) {
-                \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
+                $recipientEmail = $request_item->resident->email;
+                $requestData = $request_item->load(['resident', 'documentType']);
+
+                app()->terminating(function () use ($recipientEmail, $requestData) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($recipientEmail)
+                            ->send(new \App\Mail\DocumentReadyMail($requestData));
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error("Email send failed: " . $e->getMessage());
+                    }
+                });
             }
 
             return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
