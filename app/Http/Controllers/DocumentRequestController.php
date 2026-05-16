@@ -147,7 +147,12 @@ class DocumentRequestController extends Controller {
 
         // Send Email Notification in the background using the explicitly defined Job
         if ($request_item->resident->email) {
-            \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
+            try {
+                \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to dispatch job: " . $e->getMessage());
+                return back()->with('error', 'Request marked as ready for pickup, but email system failed: ' . $e->getMessage());
+            }
         }
 
         return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
