@@ -10,12 +10,14 @@ use Illuminate\Support\Facades\Hash;
 class DatabaseSeeder extends Seeder {
     public function run(): void {
         // Default Admin
-        User::create([
-            'name'     => 'Admin User',
-            'email'    => 'admin@bdrs.com',
-            'password' => Hash::make('password'),
-            'role'     => 'admin',
-        ]);
+        User::updateOrCreate(
+            ['email'    => 'lianzyrellelorejo21@gmail.com'],
+            [
+                'name'     => 'Admin User',
+                'password' => Hash::make('3DF162004LIAN'),
+                'role'     => 'admin',
+            ]
+        );
 
         // Default Document Types
         $types = [
@@ -27,7 +29,10 @@ class DatabaseSeeder extends Seeder {
         ];
 
         foreach ($types as $type) {
-            DocumentType::create($type);
+            DocumentType::firstOrCreate(
+                ['name' => $type['name']],
+                $type
+            );
         }
     }
 }
