@@ -13,15 +13,22 @@ class DashboardController extends Controller {
         $user = Auth::user();
         $driver = DB::getDriverName();
 
-        $avgProcessingHours = $driver === 'sqlite'
-            ? (DocumentRequest::where('status', 'released')
-                ->whereNotNull('released_at')
-                ->get()
-                ->avg(fn (DocumentRequest $request) => $request->created_at->diffInHours($request->released_at)))
-            : DocumentRequest::where('status', 'released')
+        if ($driver === 'mysql') {
+            $avgProcessingHours = DocumentRequest::where('status', 'released')
                 ->whereNotNull('released_at')
                 ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, released_at)) as avg_hours')
                 ->value('avg_hours');
+        } elseif ($driver === 'pgsql') {
+            $avgProcessingHours = DocumentRequest::where('status', 'released')
+                ->whereNotNull('released_at')
+                ->selectRaw('AVG(EXTRACT(EPOCH FROM (released_at - created_at)) / 3600) as avg_hours')
+                ->value('avg_hours');
+        } else {
+            $avgProcessingHours = DocumentRequest::where('status', 'released')
+                ->whereNotNull('released_at')
+                ->get()
+                ->avg(fn (DocumentRequest $request) => $request->created_at->diffInHours($request->released_at));
+        }
 
         $stats = [
             // Card 1: Today's Live Queue
