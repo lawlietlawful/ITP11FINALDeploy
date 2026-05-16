@@ -148,8 +148,12 @@ class DocumentRequestController extends Controller {
         // Send Email Notification in the background after the response is sent
         if ($request_item->resident->email) {
             dispatch(function () use ($request_item) {
-                \Illuminate\Support\Facades\Mail::to($request_item->resident->email)
-                    ->send(new \App\Mail\DocumentReadyMail($request_item));
+                try {
+                    \Illuminate\Support\Facades\Mail::to($request_item->resident->email)
+                        ->send(new \App\Mail\DocumentReadyMail($request_item));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send Document Ready email: " . $e->getMessage());
+                }
             })->afterResponse();
         }
 
