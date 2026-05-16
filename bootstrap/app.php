@@ -22,5 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // TEMPORARY DIAGNOSTIC: Show actual error details for debugging
+        $exceptions->render(function (\Throwable $e, $request) {
+            return response(
+                '<h1>DEBUG ERROR</h1>'
+                . '<p><strong>Message:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>'
+                . '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>'
+                . '<p><strong>Class:</strong> ' . get_class($e) . '</p>'
+                . '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>',
+                500
+            );
+        });
     })->create();
