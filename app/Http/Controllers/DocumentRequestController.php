@@ -14,12 +14,13 @@ class DocumentRequestController extends Controller {
     public function index(Request $request) {
         $requests = DocumentRequest::with(['resident', 'documentType'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->search, fn($q) =>
+            ->when($request->search, function ($q) use ($request) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
                 $q->whereHas('resident', fn($r) =>
-                    $r->where('first_name', 'like', "%{$request->search}%")
-                      ->orWhere('last_name', 'like', "%{$request->search}%")
-                )
-            )
+                    $r->where('first_name', $like, "%{$request->search}%")
+                      ->orWhere('last_name', $like, "%{$request->search}%")
+                );
+            })
             ->latest()
             ->paginate(5)
             ->withQueryString();

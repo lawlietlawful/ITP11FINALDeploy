@@ -18,7 +18,10 @@ class DocumentTypeController extends Controller {
         $direction = in_array(strtolower($direction), ['asc', 'desc']) ? $direction : 'asc';
 
         $types = DocumentType::orderBy($sort, $direction)
-            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->search, function ($q) use ($request) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+                $q->where('name', $like, "%{$request->search}%");
+            })
             ->when($request->status === 'active', fn($q) => $q->active())
             ->when($request->status === 'inactive', fn($q) => $q->inactive())
             ->paginate(10)

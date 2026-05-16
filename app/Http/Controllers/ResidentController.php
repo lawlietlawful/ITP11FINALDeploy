@@ -14,12 +14,13 @@ class ResidentController extends Controller {
         $residents = Resident::withCount('documentRequests')
             ->with(['documentRequests.documentType'])
             ->when($request->search, function ($q) use ($request) {
-                $q->where(function ($sub) use ($request) {
-                    $sub->where('first_name', 'like', "%{$request->search}%")
-                        ->orWhere('last_name', 'like', "%{$request->search}%")
-                        ->orWhere('middle_name', 'like', "%{$request->search}%")
-                        ->orWhere('address', 'like', "%{$request->search}%")
-                        ->orWhere('resident_id', 'like', "%{$request->search}%");
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+                $q->where(function ($sub) use ($request, $like) {
+                    $sub->where('first_name', $like, "%{$request->search}%")
+                        ->orWhere('last_name', $like, "%{$request->search}%")
+                        ->orWhere('middle_name', $like, "%{$request->search}%")
+                        ->orWhere('address', $like, "%{$request->search}%")
+                        ->orWhere('resident_id', $like, "%{$request->search}%");
                 });
             })
             ->when($request->gender, fn($q) => $q->where('gender', $request->gender))
