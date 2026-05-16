@@ -45,6 +45,8 @@ RUN mkdir -p storage/framework/cache/data \
 
 RUN chmod -R 777 storage bootstrap/cache
 
-# Start the application using Laravel's built-in server and background worker
-# This will run migrations, link the storage, and start the server on the port Render provides
-CMD rm -rf public/storage && php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && php artisan queue:work --daemon & php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Make the startup script executable
+RUN chmod +x start.sh
+
+# Start the application using the startup script
+CMD ["./start.sh"]
