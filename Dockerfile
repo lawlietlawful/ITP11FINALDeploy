@@ -40,9 +40,11 @@ RUN mkdir -p storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
-    bootstrap/cache
+    bootstrap/cache \
+    storage/app/public
+
 RUN chmod -R 777 storage bootstrap/cache
 
 # Start the application using Laravel's built-in server
 # This will run migrations, link the storage, and start the server on the port Render provides
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD rm -rf public/storage && php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

@@ -28,9 +28,11 @@ class User extends Authenticatable
 
     public function getProfilePhotoUrlAttribute()
     {
-        return $this->profile_photo_path
-            ? asset('storage/' . $this->profile_photo_path)
-            : null;
+        if ($this->profile_photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->profile_photo_path)) {
+            return asset('storage/' . $this->profile_photo_path);
+        }
+
+        return null;
     }
 
     public function scopeAdmin($query)
