@@ -101,6 +101,11 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
             $user->profile_photo_path = $request->file('photo')->store('profile-photos', 'public');
+
+            // Also save to database for persistence across Render deploys
+            $photoFile = $request->file('photo');
+            $user->profile_photo_data = base64_encode(file_get_contents($photoFile->getRealPath()));
+            $user->profile_photo_mime = $photoFile->getMimeType();
         }
 
         $user->save();
@@ -114,11 +119,30 @@ class ProfileController extends Controller
 
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
-            $user->profile_photo_path = null;
-            $user->save();
         }
 
+        $user->profile_photo_path = null;
+        $user->profile_photo_data = null;
+        $user->profile_photo_mime = null;
+        $user->save();
+
         return back()->with('success', 'Profile photo removed successfully.');
+    }
+
+    /**
+     * Serve profile photo from the database (used when filesystem is wiped).
+     */
+    public function servePhoto()
+    {
+        $user = auth()->user();
+
+        if ($user->profile_photo_data && $user->profile_photo_mime) {
+            return response(base64_decode($user->profile_photo_data))
+                ->header('Content-Type', $user->profile_photo_mime)
+                ->header('Cache-Control', 'public, max-age=86400');
+        }
+
+        abort(404);
     }
 
     public function updatePassword(Request $request)

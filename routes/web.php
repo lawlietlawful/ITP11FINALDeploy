@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::get('/profile/photo/serve', [ProfileController::class, 'servePhoto'])->name('profile.photo.serve');
     Route::delete('/profile/sessions', [ProfileController::class, 'logoutOtherBrowserSessions'])->name('profile.sessions.destroy');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -79,4 +80,22 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+
+    // TEMPORARY: Test email delivery
+    Route::get('/test-email', function () {
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                'This is a test email from VistaBarangay. If you see this, email delivery is working!',
+                function ($message) {
+                    $message->to('lianzyrellelorejo21@gmail.com')
+                            ->subject('VistaBarangay - Email Test');
+                }
+            );
+            return response('<h1 style="color:green">✅ Email sent successfully!</h1><p>Check your inbox (and spam folder) for the test email.</p>', 200);
+        } catch (\Throwable $e) {
+            return response('<h1 style="color:red">❌ Email FAILED</h1>'
+                . '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>'
+                . '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>', 500);
+        }
+    });
 });
