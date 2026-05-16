@@ -19,17 +19,12 @@ class SendDocumentReadyEmail implements ShouldQueue
     public $request_item;
 
     /**
-     * Explicitly force this job onto the database queue 
-     * to prevent it from ever running synchronously on Render.
-     */
-    public $connection = 'database';
-
-    /**
      * Create a new job instance.
      */
     public function __construct(DocumentRequest $request_item)
     {
         $this->request_item = $request_item;
+        $this->onConnection('database');
     }
 
     /**
