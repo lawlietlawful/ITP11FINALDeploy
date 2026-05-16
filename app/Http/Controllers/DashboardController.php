@@ -62,8 +62,10 @@ class DashboardController extends Controller {
             $dates->push(now()->subDays($i)->format('Y-m-d'));
         }
 
+        $dateSql = $driver === 'pgsql' ? 'CAST(created_at AS DATE)' : 'DATE(created_at)';
+
         $requestsLast7Days = DocumentRequest::query()
-            ->selectRaw('DATE(created_at) as request_date, COUNT(*) as total')
+            ->selectRaw("{$dateSql} as request_date, COUNT(*) as total")
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->groupBy('request_date')
             ->pluck('total', 'request_date');
