@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>VistáBarangay - Document Request System</title>
+    <link rel="icon" href="{{ \App\Models\Setting::getCached('system_logo') ?: asset('New Logo.png') }}" type="image/png">
     <meta name="description" content="VistáBarangay - Manage residents and process official barangay documents">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
