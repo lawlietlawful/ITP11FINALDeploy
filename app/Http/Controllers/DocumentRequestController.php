@@ -145,16 +145,9 @@ class DocumentRequestController extends Controller {
             description: "Request marked as ready for pickup by " . Auth::user()->name,
         );
 
-        // Send Email Notification in the background using the Queue system
+        // Send Email Notification in the background using the explicitly defined Job
         if ($request_item->resident->email) {
-            dispatch(function () use ($request_item) {
-                try {
-                    \Illuminate\Support\Facades\Mail::to($request_item->resident->email)
-                        ->send(new \App\Mail\DocumentReadyMail($request_item));
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("Failed to send Document Ready email: " . $e->getMessage());
-                }
-            });
+            \App\Jobs\SendDocumentReadyEmail::dispatch($request_item);
         }
 
         return back()->with('success', 'Request marked as ready for pickup. Email notification sent.');
