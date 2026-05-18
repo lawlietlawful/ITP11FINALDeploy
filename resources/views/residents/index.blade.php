@@ -119,8 +119,8 @@
                                                 @error('email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
-                                                <input type="date" name="birthdate" value="{{ old('birthdate') }}"
+                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate <span class="text-red-400">*</span></label>
+                                                <input type="date" name="birthdate" value="{{ old('birthdate') }}" required
                                                     class="form-input w-full @error('birthdate') !border-red-400 @enderror"
                                                     max="{{ now()->subYears(18)->format('Y-m-d') }}">
                                                 @error('birthdate') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
@@ -128,8 +128,8 @@
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Gender</label>
-                                                <select name="gender" class="form-input w-full @error('gender') !border-red-400 @enderror">
+                                                <label class="block text-sm font-medium text-gray-600 mb-1.5">Gender <span class="text-red-400">*</span></label>
+                                                <select name="gender" required class="form-input w-full @error('gender') !border-red-400 @enderror">
                                                     <option value="">— Select —</option>
                                                     <option value="Male" {{ old('gender') === 'Male' ? 'selected' : '' }}>Male
                                                     </option>
@@ -140,8 +140,8 @@
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Civil
-                                                    Status</label>
-                                                <select name="civil_status" class="form-input w-full @error('civil_status') !border-red-400 @enderror">
+                                                    Status <span class="text-red-400">*</span></label>
+                                                <select name="civil_status" required class="form-input w-full @error('civil_status') !border-red-400 @enderror">
                                                     <option value="">— Select —</option>
                                                     <option value="Single" {{ old('civil_status') === 'Single' ? 'selected' : '' }}>Single</option>
                                                     <option value="Married" {{ old('civil_status') === 'Married' ? 'selected' : '' }}>Married</option>
@@ -836,17 +836,17 @@
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
+                                                                    class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate <span class="text-red-400">*</span></label>
                                                                 <input type="date" name="birthdate"
-                                                                    value="{{ $resident->birthdate?->format('Y-m-d') }}"
+                                                                    value="{{ $resident->birthdate?->format('Y-m-d') }}" required
                                                                     class="form-input w-full" max="{{ now()->subYears(18)->format('Y-m-d') }}">
                                                             </div>
                                                         </div>
                                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                             <div>
                                                                 <label
-                                                                    class="block text-sm font-medium text-gray-600 mb-1.5">Gender</label>
-                                                                <select name="gender" class="form-input w-full">
+                                                                    class="block text-sm font-medium text-gray-600 mb-1.5">Gender <span class="text-red-400">*</span></label>
+                                                                <select name="gender" required class="form-input w-full">
                                                                     <option value="">— Select —</option>
                                                                     <option value="Male" {{ $resident->gender === 'Male' ? 'selected' : '' }}>Male</option>
                                                                     <option value="Female" {{ $resident->gender === 'Female' ? 'selected' : '' }}>Female</option>
@@ -854,8 +854,8 @@
                                                             </div>
                                                             <div>
                                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Civil
-                                                                    Status</label>
-                                                                <select name="civil_status" class="form-input w-full">
+                                                                    Status <span class="text-red-400">*</span></label>
+                                                                <select name="civil_status" required class="form-input w-full">
                                                                     <option value="">— Select —</option>
                                                                     <option value="Single" {{ $resident->civil_status === 'Single' ? 'selected' : '' }}>Single</option>
                                                                     <option value="Married" {{ $resident->civil_status === 'Married' ? 'selected' : '' }}>Married</option>
