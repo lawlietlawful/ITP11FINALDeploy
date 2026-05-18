@@ -69,70 +69,86 @@
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">First Name <span
                                                         class="text-red-400">*</span></label>
                                                 <input type="text" name="first_name" value="{{ old('first_name') }}" required
-                                                    class="form-input w-full">
+                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
+                                                    class="form-input w-full @error('first_name') !border-red-400 @enderror">
+                                                @error('first_name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Middle
                                                     Name</label>
                                                 <input type="text" name="middle_name" value="{{ old('middle_name') }}"
-                                                    class="form-input w-full">
+                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
+                                                    class="form-input w-full @error('middle_name') !border-red-400 @enderror">
+                                                @error('middle_name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Last Name <span
                                                         class="text-red-400">*</span></label>
                                                 <input type="text" name="last_name" value="{{ old('last_name') }}" required
-                                                    class="form-input w-full">
+                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
+                                                    class="form-input w-full @error('last_name') !border-red-400 @enderror">
+                                                @error('last_name') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-600 mb-1.5">Address (Purok) <span
                                                     class="text-red-400">*</span></label>
-                                            <select name="address" required class="form-input w-full cursor-pointer">
+                                            <select name="address" required class="form-input w-full cursor-pointer @error('address') !border-red-400 @enderror">
                                                 <option value="" disabled {{ old('address') ? '' : 'selected' }}>— Select Purok —</option>
                                                 @foreach(['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6'] as $purok)
                                                     <option value="{{ $purok }}" {{ old('address') === $purok ? 'selected' : '' }}>{{ $purok }}</option>
                                                 @endforeach
                                             </select>
+                                            @error('address') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Contact
                                                     Number</label>
-                                                <input type="text" name="contact_number" value="{{ old('contact_number') }}"
-                                                    class="form-input w-full" placeholder="09171234567">
+                                                <input type="tel" name="contact_number" value="{{ old('contact_number') }}"
+                                                    class="form-input w-full @error('contact_number') !border-red-400 @enderror"
+                                                    placeholder="09171234567" maxlength="11"
+                                                    pattern="09\d{9}" title="Must be a valid PH mobile number (e.g., 09171234567)">
+                                                @error('contact_number') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Email Address</label>
                                                 <input type="email" name="email" value="{{ old('email') }}"
-                                                    class="form-input w-full" placeholder="juan@example.com">
+                                                    class="form-input w-full @error('email') !border-red-400 @enderror"
+                                                    placeholder="juan@example.com" maxlength="255">
+                                                @error('email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Birthdate</label>
                                                 <input type="date" name="birthdate" value="{{ old('birthdate') }}"
-                                                    class="form-input w-full" max="{{ now()->subYears(18)->format('Y-m-d') }}">
+                                                    class="form-input w-full @error('birthdate') !border-red-400 @enderror"
+                                                    max="{{ now()->subYears(18)->format('Y-m-d') }}">
+                                                @error('birthdate') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Gender</label>
-                                                <select name="gender" class="form-input w-full">
+                                                <select name="gender" class="form-input w-full @error('gender') !border-red-400 @enderror">
                                                     <option value="">— Select —</option>
                                                     <option value="Male" {{ old('gender') === 'Male' ? 'selected' : '' }}>Male
                                                     </option>
                                                     <option value="Female" {{ old('gender') === 'Female' ? 'selected' : '' }}>
                                                         Female</option>
                                                 </select>
+                                                @error('gender') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Civil
                                                     Status</label>
-                                                <select name="civil_status" class="form-input w-full">
+                                                <select name="civil_status" class="form-input w-full @error('civil_status') !border-red-400 @enderror">
                                                     <option value="">— Select —</option>
                                                     <option value="Single" {{ old('civil_status') === 'Single' ? 'selected' : '' }}>Single</option>
                                                     <option value="Married" {{ old('civil_status') === 'Married' ? 'selected' : '' }}>Married</option>
                                                     <option value="Widowed" {{ old('civil_status') === 'Widowed' ? 'selected' : '' }}>Widowed</option>
                                                     <option value="Separated" {{ old('civil_status') === 'Separated' ? 'selected' : '' }}>Separated</option>
                                                 </select>
+                                                @error('civil_status') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                             </div>
                                         </div>
                                     </div>
@@ -771,42 +787,52 @@
                                                                     Name <span class="text-red-400">*</span></label>
                                                                 <input type="text" name="first_name"
                                                                     value="{{ $resident->first_name }}" required
+                                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
                                                                     class="form-input w-full">
                                                             </div>
                                                             <div>
                                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Middle
                                                                     Name</label>
                                                                 <input type="text" name="middle_name"
-                                                                    value="{{ $resident->middle_name }}" class="form-input w-full">
+                                                                    value="{{ $resident->middle_name }}" 
+                                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
+                                                                    class="form-input w-full">
                                                             </div>
                                                             <div>
                                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Last
                                                                     Name <span class="text-red-400">*</span></label>
                                                                 <input type="text" name="last_name"
                                                                     value="{{ $resident->last_name }}" required
+                                                                    maxlength="100" pattern="[A-Za-zÀ-ÿñÑ\s\-'.]+" title="Letters, spaces, hyphens, and periods only"
                                                                     class="form-input w-full">
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <label class="block text-sm font-medium text-gray-600 mb-1.5">Address
+                                                            <label class="block text-sm font-medium text-gray-600 mb-1.5">Address (Purok)
                                                                 <span class="text-red-400">*</span></label>
-                                                            <textarea name="address" rows="3" required
-                                                                class="form-input w-full resize-none">{{ $resident->address }}</textarea>
+                                                            <select name="address" required class="form-input w-full cursor-pointer">
+                                                                <option value="" disabled {{ $resident->address ? '' : 'selected' }}>— Select Purok —</option>
+                                                                @foreach(['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6'] as $purok)
+                                                                    <option value="{{ $purok }}" {{ $resident->address === $purok ? 'selected' : '' }}>{{ $purok }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                                             <div>
                                                                 <label
                                                                     class="block text-sm font-medium text-gray-600 mb-1.5">Contact
                                                                     Number</label>
-                                                                <input type="text" name="contact_number"
+                                                                <input type="tel" name="contact_number"
                                                                     value="{{ $resident->contact_number }}"
-                                                                    class="form-input w-full" placeholder="09171234567">
+                                                                    class="form-input w-full" placeholder="09171234567"
+                                                                    maxlength="11" pattern="09\d{9}" title="Must be a valid PH mobile number (e.g., 09171234567)">
                                                             </div>
                                                             <div>
                                                                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Email Address</label>
                                                                 <input type="email" name="email"
                                                                     value="{{ $resident->email }}"
-                                                                    class="form-input w-full" placeholder="juan@example.com">
+                                                                    class="form-input w-full" placeholder="juan@example.com"
+                                                                    maxlength="255">
                                                             </div>
                                                             <div>
                                                                 <label

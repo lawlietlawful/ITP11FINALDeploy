@@ -16,10 +16,13 @@ class ReportController extends Controller {
             ->when($request->date_to, fn($q) => $q->whereDate('document_requests.created_at', '<=', $request->date_to))
             ->when($request->search, function ($q) use ($request) {
                 $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
-                $q->whereHas('resident', fn($r) =>
-                    $r->where('first_name', $like, "%{$request->search}%")
-                      ->orWhere('last_name', $like, "%{$request->search}%")
-                );
+                $q->where(function ($sub) use ($request, $like) {
+                    $sub->where('tracking_code', $like, "%{$request->search}%")
+                        ->orWhereHas('resident', fn($r) =>
+                            $r->where('first_name', $like, "%{$request->search}%")
+                              ->orWhere('last_name', $like, "%{$request->search}%")
+                        );
+                });
             });
 
         $stats = [
@@ -52,10 +55,13 @@ class ReportController extends Controller {
             ->when($request->date_to, fn($q) => $q->whereDate('document_requests.created_at', '<=', $request->date_to))
             ->when($request->search, function ($q) use ($request) {
                 $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
-                $q->whereHas('resident', fn($r) =>
-                    $r->where('first_name', $like, "%{$request->search}%")
-                      ->orWhere('last_name', $like, "%{$request->search}%")
-                );
+                $q->where(function ($sub) use ($request, $like) {
+                    $sub->where('tracking_code', $like, "%{$request->search}%")
+                        ->orWhereHas('resident', fn($r) =>
+                            $r->where('first_name', $like, "%{$request->search}%")
+                              ->orWhere('last_name', $like, "%{$request->search}%")
+                        );
+                });
             })
             ->latest('document_requests.created_at');
 
